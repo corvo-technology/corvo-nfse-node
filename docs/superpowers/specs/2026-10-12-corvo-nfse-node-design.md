@@ -224,7 +224,7 @@ Comportamento:
 - `package.json`: `type: module`, exports dual import/require com types, `bin.corvo`.
 - tsup: `dist/esm`, `dist/cjs`, `.d.ts`. Biome ou eslint mínimo — seguir o padrão do
   corvo-backend (eslint) só se não pesar; decisão: **Biome** (rápido, zero config extra).
-- Vitest. `pnpm` para gerência (mesma escolha da millionsend).
+- Vitest. `yarn` para gerência (mesmo padrão do corvo-backend).
 - README em português com quickstart lib + CLI e exemplo de verificação de webhook.
 
 ## Testes
