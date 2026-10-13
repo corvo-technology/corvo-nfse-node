@@ -67,7 +67,11 @@ export class WebhooksResource {
 	}
 
 	iterate(params: WebhookListParams = {}): AsyncGenerator<Webhook, void, undefined> {
-		return this.http.iterate<Webhook>("/webhooks", { limit: params.limit, cursor: params.cursor }, mapPlain);
+		return this.http.iterate<Webhook>(
+			"/webhooks",
+			{ limit: params.limit, cursor: params.cursor },
+			mapPlain,
+		);
 	}
 
 	create(params: WebhookCreateParams): Promise<Result<WebhookWithSecret>> {

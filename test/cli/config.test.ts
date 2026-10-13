@@ -21,7 +21,7 @@ afterEach(() => {
 describe("cli config", () => {
 	it("reads and writes the config file with 0600 permissions", () => {
 		expect(readConfig()).toEqual({});
-		writeConfig({ apiKey: "corvo_test_" + "a".repeat(40), baseUrl: "https://corvo.example.com" });
+		writeConfig({ apiKey: `corvo_test_${"a".repeat(40)}`, baseUrl: "https://corvo.example.com" });
 		const onDisk = JSON.parse(readFileSync(configPath(), "utf8"));
 		expect(onDisk.apiKey).toContain("corvo_test_");
 		expect(statSync(configPath()).mode & 0o777).toBe(0o600);
@@ -32,22 +32,22 @@ describe("cli config", () => {
 	});
 
 	it("buildClient precedence: flags > env > config file", () => {
-		writeConfig({ apiKey: "corvo_test_" + "f".repeat(40), baseUrl: "https://config.exemplo.com" });
-		vi.stubEnv("CORVO_API_KEY", "corvo_test_" + "e".repeat(40));
+		writeConfig({ apiKey: `corvo_test_${"f".repeat(40)}`, baseUrl: "https://config.exemplo.com" });
+		vi.stubEnv("CORVO_API_KEY", `corvo_test_${"e".repeat(40)}`);
 		vi.stubEnv("CORVO_BASE_URL", "https://env.exemplo.com");
 
 		const fromFile = buildClient({});
 		expect(fromFile).toBeDefined();
 
 		const fromFlags = buildClient({
-			apiKey: "corvo_live_" + "c".repeat(40),
+			apiKey: `corvo_live_${"c".repeat(40)}`,
 			baseUrl: "http://localhost:4000",
 		});
 		expect(fromFlags).toBeDefined();
 
 		vi.unstubAllEnvs();
 		vi.stubEnv("CORVO_CONFIG_PATH", join(dir, "config.json"));
-		const onlyFile = buildClient({ apiKey: "corvo_test_" + "a".repeat(40) });
+		const onlyFile = buildClient({ apiKey: `corvo_test_${"a".repeat(40)}` });
 		expect(onlyFile).toBeDefined();
 	});
 

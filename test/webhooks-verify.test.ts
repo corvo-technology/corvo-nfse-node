@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Corvo, CorvoApiError, WEBHOOK_EVENTS, VERSION } from "../src/index";
+import { Corvo, CorvoApiError, VERSION, WEBHOOK_EVENTS } from "../src/index";
 import { CorvoWebhooks } from "../src/webhooks";
 
 const BODY = '{"type":"nfse.invoice.authorized","data":{"id":"inv_1"}}';
