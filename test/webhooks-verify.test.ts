@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Corvo, CorvoApiError, WEBHOOK_EVENTS, VERSION } from "../src/index";
 import { CorvoWebhooks } from "../src/webhooks";
 
 const BODY = '{"type":"nfse.invoice.authorized","data":{"id":"inv_1"}}';
@@ -33,5 +34,16 @@ describe("CorvoWebhooks.verifySignature", () => {
 		expect(CorvoWebhooks.verifySignature(BODY, "sha256=zzzz", SECRET)).toBe(false);
 		expect(CorvoWebhooks.verifySignature(BODY, "", SECRET)).toBe(false);
 		expect(CorvoWebhooks.verifySignature(BODY, SIGNATURE, "")).toBe(false);
+	});
+});
+
+describe("public exports", () => {
+	it("exposes the client, error, events and version", () => {
+		expect(typeof Corvo).toBe("function");
+		expect(typeof CorvoWebhooks.verifySignature).toBe("function");
+		expect(CorvoApiError).toBeDefined();
+		expect(WEBHOOK_EVENTS).toHaveLength(9);
+		expect(WEBHOOK_EVENTS).toContain("webhook.test");
+		expect(VERSION).toBe("0.1.0");
 	});
 });
