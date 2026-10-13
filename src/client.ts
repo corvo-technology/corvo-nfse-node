@@ -1,4 +1,10 @@
+import { BillingResource } from "./resources/billing";
+import { CertificatesResource } from "./resources/certificates";
+import { CompaniesResource } from "./resources/companies";
+import { CreditsResource } from "./resources/credits";
 import { HealthResource } from "./resources/health";
+import { InvoicesResource } from "./resources/invoices";
+import { WebhooksResource } from "./resources/webhooks";
 import { type FetchLike, HttpTransport } from "./transport";
 
 export interface CorvoOptions {
@@ -13,7 +19,13 @@ export interface CorvoOptions {
 const DEFAULT_BASE_URL = "https://api.corvo.tech";
 
 export class Corvo {
+	readonly billing: BillingResource;
+	readonly certificates: CertificatesResource;
+	readonly companies: CompaniesResource;
+	readonly credits: CreditsResource;
 	readonly health: HealthResource;
+	readonly invoices: InvoicesResource;
+	readonly webhooks: WebhooksResource;
 
 	constructor(options: CorvoOptions = {}) {
 		const apiKey = options.apiKey || process.env.CORVO_API_KEY;
@@ -32,6 +44,12 @@ export class Corvo {
 			fetch: options.fetch,
 			allowInsecureHttp: options.allowInsecureHttp,
 		});
+		this.billing = new BillingResource(http);
+		this.certificates = new CertificatesResource(http);
+		this.credits = new CreditsResource(http);
+		this.companies = new CompaniesResource(http);
 		this.health = new HealthResource(http);
+		this.webhooks = new WebhooksResource(http);
+		this.invoices = new InvoicesResource(http);
 	}
 }
