@@ -41,7 +41,7 @@
     "vitest": "^2.1.8"
   },
   "keywords": ["corvo", "nfse", "nota fiscal", "sdk", "cli", "api"],
-  "homepage": "https://corvo.tech/en/api-docs",
+  "homepage": "https://corvo.tech/en/docs",
   "bugs": { "url": "https://github.com/corvo-technology/corvo-nfse-node/issues" },
   "sideEffects": false,
   "publishConfig": { "access": "public" },

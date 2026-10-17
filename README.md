@@ -9,7 +9,7 @@
 - **A CLI** (`corvo`) for the same operations.
 - **Small footprint.** The SDK uses the built-in `fetch`, `FormData`, `Blob` and `node:crypto`. The only dependency is `commander`, used by the CLI.
 
-Full API reference: <https://corvo.tech/en/api-docs>.
+Full API reference: <https://corvo.tech/en/docs>.
 
 ## Install
 
