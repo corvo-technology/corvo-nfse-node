@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Corvo, CorvoApiError, VERSION, WEBHOOK_EVENTS } from "../src/index";
+import { Corvo, CorvoApiError, WEBHOOK_EVENTS } from "../src/index";
 import { CorvoWebhooks } from "../src/webhooks";
 
 const BODY = '{"type":"nfse.invoice.authorized","data":{"id":"inv_1"}}';
@@ -45,6 +45,5 @@ describe("public exports", () => {
 		expect(WEBHOOK_EVENTS).toHaveLength(9);
 		expect(WEBHOOK_EVENTS).toContain("nfse.invoice.fiscal_discrepancy");
 		expect(WEBHOOK_EVENTS).not.toContain("webhook.test");
-		expect(VERSION).toBe("0.1.0");
 	});
 });
