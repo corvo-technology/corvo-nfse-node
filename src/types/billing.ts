@@ -33,6 +33,7 @@ export interface BillingPlanResponse {
 
 export interface QuotaStatus {
 	canEmit: boolean;
+	reason?: "no_credits" | "daily_limit_exceeded" | "company_limit_exceeded" | "plan_blocked";
 	creditsRemaining: number;
 	creditsUsed: number;
 	creditsReserved: number;

@@ -14,7 +14,7 @@ export interface TransportOptions {
 
 export type Query = Record<string, string | number | undefined>;
 
-export type Unwrap = "data" | "data+props" | "none";
+export type Unwrap = "data" | "none";
 
 export interface RequestOptions {
 	method: "GET" | "POST" | "PATCH" | "DELETE";
@@ -39,7 +39,6 @@ interface RawPage {
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 export const mapPlain = <T>(raw: unknown): T => raw as T;
-export const mapProps = <T>(raw: unknown): T => (raw as { props: T }).props;
 
 function isPrivateHost(hostname: string): boolean {
 	const host = hostname.toLowerCase();
@@ -206,11 +205,7 @@ export class HttpTransport {
 			value !== null && typeof value === "object" && "data" in value
 				? (value as { data: unknown }).data
 				: null;
-		if (mode === "data") return envelope ?? null;
-		if (envelope !== null && typeof envelope === "object" && "props" in envelope) {
-			return (envelope as { props: unknown }).props;
-		}
-		return null;
+		return envelope ?? null;
 	}
 
 	async request<T>(options: RequestOptions): Promise<Result<T>> {

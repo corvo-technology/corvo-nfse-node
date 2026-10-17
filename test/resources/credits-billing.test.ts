@@ -48,10 +48,10 @@ describe("credits", () => {
 		});
 	});
 
-	it("plans unwraps props items from the cursor page", async () => {
+	it("plans returns items from the cursor page", async () => {
 		const corvo = client(async () =>
 			jsonResponse({
-				data: [{ props: creditPlan }],
+				data: [creditPlan],
 				pagination: { limit: 1, hasMore: false, nextCursor: null },
 			}),
 		);
@@ -60,7 +60,7 @@ describe("credits", () => {
 		expect(res.data?.pagination.hasMore).toBe(false);
 	});
 
-	it("history walks the cursor pages unwrapping props", async () => {
+	it("history walks the cursor pages", async () => {
 		const tx = {
 			id: "tx_1",
 			type: "topup",
@@ -75,7 +75,7 @@ describe("credits", () => {
 		};
 		const pages = [
 			jsonResponse({
-				data: [{ props: tx }],
+				data: [tx],
 				pagination: { limit: 1, hasMore: true, nextCursor: "h1" },
 			}),
 			jsonResponse({ data: [], pagination: { limit: 1, hasMore: false, nextCursor: null } }),
@@ -85,7 +85,7 @@ describe("credits", () => {
 		const items = [];
 		for await (const entry of corvo.credits.iterateHistory({ limit: 1 })) items.push(entry);
 		expect(items).toHaveLength(1);
-		expect(items[0].creditDelta).toBe(100);
+		expect(items[0].id).toBe(tx.id);
 	});
 });
 

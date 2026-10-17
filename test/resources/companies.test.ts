@@ -44,6 +44,7 @@ describe("companies", () => {
 			legalName: company.legalName,
 			taxId: "41.834.687/0001-48",
 			taxRegime: "Simples Nacional",
+			municipalityCode: "3550308",
 			address: {
 				street: "Rua Exemplo",
 				number: "100",

@@ -151,7 +151,7 @@ describe("cli credits, billing and health", () => {
 			"fetch",
 			vi.fn(async () =>
 				jsonResponse({
-					data: [{ props: { id: "p1", slug: "free", name: "Free", dailyLimit: 3, active: true } }],
+					data: [{ id: "p1", slug: "free", name: "Free", dailyLimit: 3, active: true }],
 					pagination: { limit: 50, hasMore: false, nextCursor: null },
 				}),
 			),

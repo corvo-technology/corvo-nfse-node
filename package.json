@@ -1,7 +1,7 @@
 {
   "name": "corvo-nfse-node",
   "version": "0.1.0",
-  "description": "SDK Node.js + CLI for the Corvo NFS-e API (self-hosted)",
+  "description": "Node.js SDK and CLI for the Corvo NFS-e API",
   "license": "MIT",
   "type": "module",
   "engines": { "node": ">=18.0.0" },
@@ -29,7 +29,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check src test",
     "format": "biome check --write src test",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "yarn typecheck && yarn lint && yarn test && yarn build"
   },
   "dependencies": { "commander": "^13.1.0" },
   "devDependencies": {
@@ -40,6 +41,10 @@
     "vitest": "^2.1.8"
   },
   "keywords": ["corvo", "nfse", "nota fiscal", "sdk", "cli", "api"],
+  "homepage": "https://corvo.tech/en/api-docs",
+  "bugs": { "url": "https://github.com/corvo-technology/corvo-nfse-node/issues" },
+  "sideEffects": false,
+  "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
     "url": "https://github.com/corvo-technology/corvo-nfse-node.git"

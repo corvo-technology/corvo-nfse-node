@@ -57,8 +57,7 @@ export function registerCredits(program: Command): void {
 				type: entry.type,
 				source: entry.source,
 				amount: entry.amount,
-				creditDelta: entry.creditDelta,
-				balanceAfter: entry.balanceAfter,
+				description: entry.description ?? "-",
 			});
 			printPage(result.data, toRow);
 		});

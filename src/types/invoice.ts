@@ -11,8 +11,10 @@ export type InvoiceStatus =
 export type InvoiceStage = "pending" | "authorized" | "documents_ready" | "completed" | "failed";
 
 export interface InvoiceCustomerInput {
-	name: string;
+	/** CPF or CNPJ. Required whenever a customer is sent; omit `customer` for an invoice without one. */
 	taxId: string;
+	name?: string;
+	/** Required when the invoice must be emailed. */
 	email?: string;
 	address?: {
 		street?: string;
@@ -24,21 +26,29 @@ export interface InvoiceCustomerInput {
 }
 
 export interface InvoiceCreateParams {
+	/** The issuing company: send its id or its CNPJ (`companyId` wins when both are set). */
 	companyId?: string;
 	companyTaxId?: string;
 	externalId?: string;
-	correlationId?: string;
-	customer: InvoiceCustomerInput;
+	customer?: InvoiceCustomerInput;
 	service: {
-		code: string;
+		/** National service code (cTribNac, 6 digits). Defaults to the company's, then to `100901`. */
+		code?: string;
+		/** IBGE code of the place of service (7 digits). Defaults to the company's city. */
 		municipalityCode?: string;
 		description?: string;
 	};
+	/** Amount in BRL, positive, up to 2 decimal places. */
 	amount: number;
+	/** `YYYY-MM-DD`. A future date needs `options.type: "SCHEDULE"`. */
 	competenceDate: string;
-	email?: string;
+	/** Unconditional discount in BRL, from 0 up to `amount`. */
+	discount?: number;
+	/** Request the email notification (default `false`). `options.email.send` wins when set. */
+	email?: boolean;
 	options?: {
 		email?: { send?: boolean };
+		type?: "IMMEDIATE" | "SCHEDULE";
 	};
 }
 
@@ -53,7 +63,7 @@ export interface Invoice {
 	idempotencyKey: string | null;
 	status: InvoiceStatus;
 	customerSnapshot: {
-		name: string;
+		name?: string;
 		email?: string;
 		taxId?: string;
 		address?: { street?: string; city?: string; state?: string; zip?: string; country?: string };
@@ -80,9 +90,11 @@ export interface Invoice {
 	lastEmailSentAt: string | null;
 	createdAt: string;
 	updatedAt: string;
-	documentsStatus: string;
-	emailStatus: string | null;
+	documentsStatus: "pending" | "ready";
+	emailStatus: "queued" | "sent" | "failed" | null;
 	stage: InvoiceStage;
+	/** When a scheduled invoice is released for issuance (ISO), or `null` for an immediate one. */
+	scheduledFor: string | null;
 }
 
 export interface InvoiceEvent {
@@ -114,4 +126,38 @@ export interface InvoiceDownloadUrl {
 export interface InvoiceEmailResult {
 	emailId: string;
 	status: string;
+}
+
+export type CalculatedTax = "iss" | "cbs" | "ibsState" | "ibsCity" | "ibsTotal";
+
+export interface CalculatedTaxAmount {
+	base: string;
+	/** Absent on `ibsTotal`, which sums the state and municipal IBS. */
+	rate?: string;
+	amount: string;
+}
+
+export interface InvoiceCalculation {
+	preEmission: true;
+	/** `blocked` means a fiscal gap (see `blocking` and `pendingFields`), not an HTTP error. */
+	status: "ready" | "blocked";
+	disclaimer: string;
+	competenceDate: string;
+	taxRegime: string | null;
+	classification: Record<string, unknown>;
+	applicability: Record<string, unknown>;
+	taxes: Partial<Record<CalculatedTax, CalculatedTaxAmount>>;
+	withholdings: Array<CalculatedTaxAmount & { tax: string }>;
+	netReceivableAmount: string | null;
+	collectionWaived: boolean | null;
+	calculation: {
+		source: string;
+		calculatorVersion: string | null;
+		rulesVersion: string;
+		legalReferences: string[];
+	};
+	warnings: Array<{ code: string; message: string; step: string }>;
+	pendingFields: Array<{ field: string; reason: string }>;
+	blocking: { code: string; message: string; step: string } | null;
+	trace: Array<{ step: string; status: string; durationMs: number; reason?: string }>;
 }

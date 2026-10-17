@@ -57,24 +57,23 @@ describe("HttpTransport", () => {
 		expect(calls[0].init.body).toBe(JSON.stringify({ amount: 10 }));
 	});
 
-	it("unwraps data by default, data+props and none", async () => {
+	it("unwraps data by default and none", async () => {
 		// Deviation from plan: the plan's mock returned the same envelope for both
 		// requests, so the unwrap:"none" body had no `pagination` key while the test
 		// asserted it was truthy. The respond function is now path-aware.
 		const { http } = captureTransport((url) =>
 			url.endsWith("/invoices/x")
-				? jsonResponse({ data: { props: { id: "inv_1", status: "queued" } } })
+				? jsonResponse({ data: { id: "inv_1", status: "queued" } })
 				: jsonResponse({
 						data: [{ id: "inv_1" }],
 						pagination: { limit: 50, hasMore: false, nextCursor: null },
 					}),
 		);
-		const withProps = await http.request<{ id: string }>({
+		const plain = await http.request<{ id: string }>({
 			method: "GET",
 			path: "/invoices/x",
-			unwrap: "data+props",
 		});
-		expect(withProps.data).toEqual({ id: "inv_1", status: "queued" });
+		expect(plain.data).toEqual({ id: "inv_1", status: "queued" });
 
 		const none = await http.request<{ data: unknown; pagination: unknown }>({
 			method: "GET",

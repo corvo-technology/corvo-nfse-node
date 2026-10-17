@@ -20,7 +20,10 @@ export type {
 } from "./types/company";
 export type { Certificate, CertificateUploadParams } from "./types/certificate";
 export type {
+	CalculatedTax,
+	CalculatedTaxAmount,
 	Invoice,
+	InvoiceCalculation,
 	InvoiceCreateParams,
 	InvoiceCustomerInput,
 	InvoiceDownloadUrl,
@@ -45,6 +48,8 @@ export type {
 	CreditHistoryParams,
 	CreditPlan,
 	CreditTransaction,
+	PlanQuote,
+	PlanRecommendation,
 } from "./types/credits";
 export type { BillingPlanResponse, QuotaStatus } from "./types/billing";
 export type { CompanyListParams } from "./resources/companies";

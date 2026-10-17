@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { CorvoApiError } from "../src/error";
-import { mapPlain, mapProps } from "../src/transport";
+import { mapPlain } from "../src/transport";
 import { API_KEY, BASE_URL, jsonResponse } from "./helpers";
 
 interface Page {
@@ -28,11 +28,11 @@ describe("HttpTransport.list/iterate", () => {
 	it("iterate walks all pages passing the cursor", async () => {
 		const pages: Page[] = [
 			{
-				data: [{ props: { id: "inv_1" } }, { props: { id: "inv_2" } }],
+				data: [{ id: "inv_1" }, { id: "inv_2" }],
 				pagination: { limit: 2, hasMore: true, nextCursor: "cursor-1" },
 			},
 			{
-				data: [{ props: { id: "inv_3" } }],
+				data: [{ id: "inv_3" }],
 				pagination: { limit: 2, hasMore: false, nextCursor: null },
 			},
 		];
@@ -48,7 +48,7 @@ describe("HttpTransport.list/iterate", () => {
 		for await (const invoice of http.iterate(
 			"/invoices",
 			{ companyId: "co_1", limit: 2 },
-			mapProps,
+			mapPlain,
 		)) {
 			ids.push((invoice as { id: string }).id);
 		}
