@@ -79,6 +79,19 @@ export function registerInvoices(program: Command): void {
 			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
 		});
 
+	commonOptions(
+		invoices.command("calculate").description("Estimate the taxes of an invoice without issuing"),
+	)
+		.option("--file <path>", "JSON file with the invoice payload (- for stdin)")
+		.action(async function (this: Command) {
+			const opts = this.opts() as CliOptions;
+			const payload = await readPayload(opts.file);
+			const client = buildClient(opts);
+			const result = await client.invoices.calculate(payload as never);
+			if (result.error) fail(result.error, Boolean(opts.json));
+			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
+		});
+
 	commonOptions(invoices.command("events").description("List invoice lifecycle events"))
 		.argument("<id>")
 		.option("--limit <n>", "Page size (1-1000)")

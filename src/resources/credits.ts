@@ -1,5 +1,5 @@
 import type { Result } from "../error";
-import { type HttpTransport, mapProps } from "../transport";
+import { type HttpTransport, mapPlain } from "../transport";
 import type { Paginated } from "../types/common";
 import type {
 	CreditBalance,
@@ -19,7 +19,7 @@ export class CreditsResource {
 		return this.http.list<CreditPlan>(
 			"/credits/plans",
 			{ limit: params.limit, cursor: params.cursor },
-			mapProps,
+			mapPlain,
 		);
 	}
 
@@ -27,7 +27,7 @@ export class CreditsResource {
 		return this.http.list<CreditTransaction>(
 			"/credits/history",
 			{ limit: params.limit, cursor: params.cursor },
-			mapProps,
+			mapPlain,
 		);
 	}
 
@@ -37,7 +37,7 @@ export class CreditsResource {
 		return this.http.iterate<CreditTransaction>(
 			"/credits/history",
 			{ limit: params.limit, cursor: params.cursor },
-			mapProps,
+			mapPlain,
 		);
 	}
 }

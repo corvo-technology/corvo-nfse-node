@@ -54,11 +54,11 @@ function client(fetch: (url: string, init?: RequestInit) => Promise<Response>): 
 }
 
 describe("invoices", () => {
-	it("create POSTs with Idempotency-Key and unwraps props", async () => {
+	it("create POSTs with Idempotency-Key and returns the invoice", async () => {
 		const calls: Array<{ url: string; init: RequestInit }> = [];
 		const corvo = client(async (url, init) => {
 			calls.push({ url, init: init ?? {} });
-			return jsonResponse({ data: { props: invoice } }, { status: 202 });
+			return jsonResponse({ data: invoice }, { status: 202 });
 		});
 		const res = await corvo.invoices.create(
 			{
@@ -118,10 +118,10 @@ describe("invoices", () => {
 		expect(res.error?.requestId).toBe("req-77");
 	});
 
-	it("list unwraps props items and keeps the cursor pagination", async () => {
+	it("list returns items and keeps the cursor pagination", async () => {
 		const corvo = client(async () =>
 			jsonResponse({
-				data: [{ props: invoice }],
+				data: [invoice],
 				pagination: { limit: 50, hasMore: true, nextCursor: "eyJ2IjoxfQ" },
 			}),
 		);
@@ -131,40 +131,36 @@ describe("invoices", () => {
 		expect(res.data?.pagination).toEqual({ limit: 50, hasMore: true, nextCursor: "eyJ2IjoxfQ" });
 	});
 
-	it("get unwraps {data: {props}}", async () => {
+	it("get returns the invoice from the data envelope", async () => {
 		const seen: string[] = [];
 		const corvo = client(async (url) => {
 			seen.push(url);
-			return jsonResponse({ data: { props: invoice } });
+			return jsonResponse({ data: invoice });
 		});
 		const res = await corvo.invoices.get(invoice.id);
 		expect(res.data?.id).toBe(invoice.id);
 		expect(seen[0]).toBe(`http://localhost:4000/v1/invoices/${invoice.id}`);
 	});
 
-	it("events returns a cursor-paginated list of props items", async () => {
+	it("events returns a cursor-paginated list", async () => {
 		const corvo = client(async () =>
 			jsonResponse({
 				data: [
 					{
-						props: {
-							id: "ev_1",
-							invoiceId: invoice.id,
-							fromStatus: null,
-							toStatus: "queued",
-							reason: null,
-							createdAt: "2026-10-12T16:06:18.910Z",
-						},
+						id: "ev_1",
+						invoiceId: invoice.id,
+						fromStatus: null,
+						toStatus: "queued",
+						reason: null,
+						createdAt: "2026-10-12T16:06:18.910Z",
 					},
 					{
-						props: {
-							id: "ev_2",
-							invoiceId: invoice.id,
-							fromStatus: "queued",
-							toStatus: "processing",
-							reason: "Starting fiscal emission",
-							createdAt: "2026-10-12T16:06:18.910Z",
-						},
+						id: "ev_2",
+						invoiceId: invoice.id,
+						fromStatus: "queued",
+						toStatus: "processing",
+						reason: "Starting fiscal emission",
+						createdAt: "2026-10-12T16:06:18.910Z",
 					},
 				],
 				pagination: { limit: 2, hasMore: true, nextCursor: "ev-cursor" },
@@ -181,11 +177,11 @@ describe("invoices", () => {
 		const urls: string[] = [];
 		const pages = [
 			jsonResponse({
-				data: [{ props: invoice }],
+				data: [invoice],
 				pagination: { limit: 1, hasMore: true, nextCursor: "c1" },
 			}),
 			jsonResponse({
-				data: [{ props: { ...invoice, id: "inv_2" } }],
+				data: [{ ...invoice, id: "inv_2" }],
 				pagination: { limit: 1, hasMore: false, nextCursor: null },
 			}),
 		];

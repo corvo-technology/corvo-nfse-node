@@ -8,10 +8,11 @@ export interface CreditBalance {
 
 export interface CreditPlan {
 	id: string;
-	slug: string;
+	slug: "free" | "developer" | "growth" | "scale" | "volume";
 	name: string;
 	description: string;
-	dailyLimit: number;
+	monthlyCreditAllowance: number;
+	dailyLimit: number | null;
 	maxActiveCompanies: number;
 	creditUnitPriceCents: number;
 	throughputRps: number;
@@ -19,26 +20,56 @@ export interface CreditPlan {
 	includesXmlDownload: boolean;
 	includesPdfDownload: boolean;
 	includesApiKeys: boolean;
-	supportTier: string;
+	supportTier: "community" | "email" | "priority";
 	active: boolean;
 	createdAt: string;
 	updatedAt: string;
 }
 
+/** `amount` is in credits, not BRL; fields ending in `Cents` are in centavos. */
 export interface CreditTransaction {
 	id: string;
+	tenantId: string;
 	type: string;
 	amount: number;
-	creditDelta: number;
-	balanceAfter: number;
-	environment: "test" | "live";
-	source: string;
-	referenceType: string | null;
-	referenceId: string | null;
+	description?: string;
+	source?: "subscription" | "avulso" | "bonus";
+	amountBrlCents?: number;
+	unitPriceCentsApplied?: number;
+	planIdSnapshot?: string;
+	reservedInvoiceId?: string;
+	periodId?: string;
+	isReservation?: boolean;
+	relatedTransactionId?: string;
 	createdAt: string;
 }
 
 export interface CreditHistoryParams {
 	limit?: number;
 	cursor?: string;
+}
+
+/** Public catalog entry (`GET /plans`): prices in centavos, monthly cycle only. */
+export interface PlanQuote {
+	slug: string;
+	name: string;
+	monthlyAllowance: number;
+	basePriceCents: number;
+	perCreditOverageCents: number;
+	monthlyTotalCents: number;
+	currency: "BRL";
+}
+
+/** Recommendation for a monthly volume (`GET /plans/quote`). Note the snake_case keys. */
+export interface PlanRecommendation {
+	volume: number;
+	recommended_plan: string;
+	plan_name: string;
+	monthly_allowance: number;
+	overage_credits: number;
+	overage_cost_cents: number;
+	base_price_cents: number;
+	total_estimated_cents: number;
+	currency: "BRL";
+	billing_cycle: "monthly";
 }

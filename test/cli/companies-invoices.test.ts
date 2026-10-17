@@ -138,10 +138,7 @@ describe("cli invoices", () => {
 			vi.fn(async (_url: string, init?: RequestInit) => {
 				sentBody = JSON.parse(String(init?.body));
 				idempotency = (init?.headers as Record<string, string>)["Idempotency-Key"];
-				return jsonResponse(
-					{ data: { props: { id: "inv_1", status: "queued" } } },
-					{ status: 202 },
-				);
+				return jsonResponse({ data: { id: "inv_1", status: "queued" } }, { status: 202 });
 			}),
 		);
 		await run("invoices", "create", "--file", file, "--email", "--idempotency-key", "order-1");
@@ -192,15 +189,13 @@ describe("cli invoices", () => {
 				return jsonResponse({
 					data: [
 						{
-							props: {
-								id: "inv_1",
-								status: "authorized",
-								stage: "completed",
-								nfseNumber: 1001,
-								amount: 10.5,
-								customerSnapshot: { name: "Cliente" },
-								createdAt: "2026-10-12T13:04:38.985Z",
-							},
+							id: "inv_1",
+							status: "authorized",
+							stage: "completed",
+							nfseNumber: 1001,
+							amount: 10.5,
+							customerSnapshot: { name: "Cliente" },
+							createdAt: "2026-10-12T13:04:38.985Z",
 						},
 					],
 					pagination: { limit: 50, hasMore: false, nextCursor: null },

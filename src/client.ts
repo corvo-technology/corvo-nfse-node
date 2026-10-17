@@ -4,6 +4,7 @@ import { CompaniesResource } from "./resources/companies";
 import { CreditsResource } from "./resources/credits";
 import { HealthResource } from "./resources/health";
 import { InvoicesResource } from "./resources/invoices";
+import { PlansResource } from "./resources/plans";
 import { WebhooksResource } from "./resources/webhooks";
 import { type FetchLike, HttpTransport } from "./transport";
 
@@ -25,6 +26,7 @@ export class Corvo {
 	readonly credits: CreditsResource;
 	readonly health: HealthResource;
 	readonly invoices: InvoicesResource;
+	readonly plans: PlansResource;
 	readonly webhooks: WebhooksResource;
 
 	constructor(options: CorvoOptions = {}) {
@@ -51,5 +53,6 @@ export class Corvo {
 		this.health = new HealthResource(http);
 		this.webhooks = new WebhooksResource(http);
 		this.invoices = new InvoicesResource(http);
+		this.plans = new PlansResource(http);
 	}
 }

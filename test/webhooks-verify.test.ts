@@ -43,7 +43,8 @@ describe("public exports", () => {
 		expect(typeof CorvoWebhooks.verifySignature).toBe("function");
 		expect(CorvoApiError).toBeDefined();
 		expect(WEBHOOK_EVENTS).toHaveLength(9);
-		expect(WEBHOOK_EVENTS).toContain("webhook.test");
+		expect(WEBHOOK_EVENTS).toContain("nfse.invoice.fiscal_discrepancy");
+		expect(WEBHOOK_EVENTS).not.toContain("webhook.test");
 		expect(VERSION).toBe("0.1.0");
 	});
 });

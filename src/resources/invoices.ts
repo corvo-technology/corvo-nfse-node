@@ -1,8 +1,9 @@
 import type { Result } from "../error";
-import { type DownloadedFile, type HttpTransport, type Query, mapProps } from "../transport";
+import { type DownloadedFile, type HttpTransport, type Query, mapPlain } from "../transport";
 import type { Paginated } from "../types/common";
 import type {
 	Invoice,
+	InvoiceCalculation,
 	InvoiceCreateParams,
 	InvoiceDownloadUrl,
 	InvoiceEmailResult,
@@ -25,8 +26,19 @@ export class InvoicesResource {
 			method: "POST",
 			path: "/invoices",
 			body: params,
-			unwrap: "data+props",
 			idempotencyKey: options.idempotencyKey,
+		});
+	}
+
+	/**
+	 * Pre-emission tax estimate (`POST /invoices/calculate`): nothing is issued, stored or charged.
+	 * A fiscal problem is not an error: it comes back with `status: "blocked"`.
+	 */
+	calculate(params: InvoiceCreateParams): Promise<Result<InvoiceCalculation>> {
+		return this.http.request<InvoiceCalculation>({
+			method: "POST",
+			path: "/invoices/calculate",
+			body: params,
 		});
 	}
 
@@ -34,16 +46,15 @@ export class InvoicesResource {
 		return this.http.request<Invoice>({
 			method: "GET",
 			path: `/invoices/${encodeURIComponent(id)}`,
-			unwrap: "data+props",
 		});
 	}
 
 	list(params: InvoiceListParams = {}): Promise<Result<Paginated<Invoice>>> {
-		return this.http.list<Invoice>("/invoices", this.listQuery(params), mapProps);
+		return this.http.list<Invoice>("/invoices", this.listQuery(params), mapPlain);
 	}
 
 	iterate(params: InvoiceListParams = {}): AsyncGenerator<Invoice, void, undefined> {
-		return this.http.iterate<Invoice>("/invoices", this.listQuery(params), mapProps);
+		return this.http.iterate<Invoice>("/invoices", this.listQuery(params), mapPlain);
 	}
 
 	events(
@@ -53,7 +64,7 @@ export class InvoicesResource {
 		return this.http.list<InvoiceEvent>(
 			`/invoices/${encodeURIComponent(id)}/events`,
 			{ limit: params.limit, cursor: params.cursor },
-			mapProps,
+			mapPlain,
 		);
 	}
 
