@@ -8,6 +8,8 @@ export const WEBHOOK_EVENTS = [
 	"nfse.invoice.email_sent",
 	"nfse.invoice.email_failed",
 	"nfse.invoice.fiscal_discrepancy",
+	"nfse.invoice.cancelled",
+	"nfse.invoice.cancellation_rejected",
 ] as const;
 
 /** Events you can subscribe to. `webhook.test` is only sent by `webhooks.test()` and cannot be subscribed. */

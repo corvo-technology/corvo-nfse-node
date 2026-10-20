@@ -6,7 +6,27 @@ export type InvoiceStatus =
 	| "retry_pending"
 	| "reconciliation_required"
 	| "manual_review"
-	| "failed";
+	| "failed"
+	| "cancelling"
+	| "cancelled";
+
+/** Why an invoice is being cancelled (`reason` in `invoices.cancel`). */
+export const INVOICE_CANCELLATION_REASONS = [
+	"issue_error",
+	"service_not_provided",
+	"other",
+] as const;
+
+export type InvoiceCancellationReason = (typeof INVOICE_CANCELLATION_REASONS)[number];
+
+export interface InvoiceCancelParams {
+	reason: InvoiceCancellationReason;
+	/**
+	 * Free-text justification, up to 255 characters. The API requires 15-255 characters to cancel
+	 * an authorized or processing invoice; it is optional for a queued one.
+	 */
+	description?: string;
+}
 
 export type InvoiceStage = "pending" | "authorized" | "documents_ready" | "completed" | "failed";
 
@@ -95,6 +115,13 @@ export interface Invoice {
 	stage: InvoiceStage;
 	/** When a scheduled invoice is released for issuance (ISO), or `null` for an immediate one. */
 	scheduledFor: string | null;
+	/** Reason sent with `invoices.cancel`, or `null` when no cancellation was requested. */
+	cancellationReason: InvoiceCancellationReason | null;
+	cancellationDescription: string | null;
+	/** When the invoice reached `cancelled` (ISO). */
+	cancelledAt: string | null;
+	/** When the cancellation was requested (ISO). */
+	cancellationRequestedAt: string | null;
 }
 
 export interface InvoiceEvent {

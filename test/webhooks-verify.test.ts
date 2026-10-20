@@ -42,7 +42,9 @@ describe("public exports", () => {
 		expect(typeof Corvo).toBe("function");
 		expect(typeof CorvoWebhooks.verifySignature).toBe("function");
 		expect(CorvoApiError).toBeDefined();
-		expect(WEBHOOK_EVENTS).toHaveLength(9);
+		expect(WEBHOOK_EVENTS).toHaveLength(11);
+		expect(WEBHOOK_EVENTS).toContain("nfse.invoice.cancelled");
+		expect(WEBHOOK_EVENTS).toContain("nfse.invoice.cancellation_rejected");
 		expect(WEBHOOK_EVENTS).toContain("nfse.invoice.fiscal_discrepancy");
 		expect(WEBHOOK_EVENTS).not.toContain("webhook.test");
 	});
