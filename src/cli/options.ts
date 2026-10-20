@@ -21,6 +21,8 @@ export interface CliOptions {
 	environment?: string;
 	url?: string;
 	events?: string;
+	reason?: string;
+	description?: string;
 }
 
 export function commonOptions(command: Command): Command {

@@ -1,7 +1,13 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Command } from "commander";
-import type { Invoice, InvoiceListParams, InvoiceStatus } from "../../types/invoice";
+import {
+	INVOICE_CANCELLATION_REASONS,
+	type Invoice,
+	type InvoiceCancellationReason,
+	type InvoiceListParams,
+	type InvoiceStatus,
+} from "../../types/invoice";
 import { buildClient } from "../config";
 import { type CliOptions, commonOptions } from "../options";
 import { fail, failFatal, printJson, printPage } from "../output";
@@ -151,6 +157,26 @@ export function registerInvoices(program: Command): void {
 			const opts = this.opts() as CliOptions;
 			const client = buildClient(opts);
 			const result = await client.invoices.sendEmail(id, { idempotencyKey: opts.idempotencyKey });
+			if (result.error) fail(result.error, Boolean(opts.json));
+			if (opts.json) return printJson(result.data);
+			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
+		});
+
+	commonOptions(invoices.command("cancel").description("Cancel an invoice"))
+		.argument("<id>")
+		.requiredOption("--reason <reason>", INVOICE_CANCELLATION_REASONS.join(", "))
+		.option("--description <text>", "Justification (15-255 chars for authorized invoices)")
+		.action(async function (this: Command, id: string) {
+			const opts = this.opts() as CliOptions;
+			const reason = opts.reason as InvoiceCancellationReason;
+			if (!INVOICE_CANCELLATION_REASONS.includes(reason)) {
+				failFatal(`--reason must be one of: ${INVOICE_CANCELLATION_REASONS.join(", ")}`);
+			}
+			const client = buildClient(opts);
+			const result = await client.invoices.cancel(id, {
+				reason,
+				description: opts.description,
+			});
 			if (result.error) fail(result.error, Boolean(opts.json));
 			if (opts.json) return printJson(result.data);
 			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
