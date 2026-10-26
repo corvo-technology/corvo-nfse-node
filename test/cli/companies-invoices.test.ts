@@ -208,4 +208,71 @@ describe("cli invoices", () => {
 		const parsed = JSON.parse(stdout.join(""));
 		expect(parsed.data[0].nfseNumber).toBe(1001);
 	});
+	it("cancels an invoice with --reason and --description", async () => {
+		const calls: Array<{ url: string; init?: RequestInit }> = [];
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (url: string, init?: RequestInit) => {
+				calls.push({ url, init });
+				return jsonResponse(
+					{ data: { id: "inv_1", status: "cancelling", cancellationReason: "issue_error" } },
+					{ status: 202 },
+				);
+			}),
+		);
+		await run(
+			"invoices",
+			"cancel",
+			"inv_1",
+			"--reason",
+			"issue_error",
+			"--description",
+			"Wrong amount on the invoice",
+		);
+		expect(calls[0].url).toContain("/v1/invoices/inv_1/cancel");
+		expect(calls[0].init?.method).toBe("POST");
+		expect(JSON.parse(String(calls[0].init?.body))).toEqual({
+			reason: "issue_error",
+			description: "Wrong amount on the invoice",
+		});
+		expect(stdout.join("")).toContain("cancelling");
+	});
+
+	it("cancels with --json and omits an absent description", async () => {
+		let body: Record<string, unknown> = {};
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_url: string, init?: RequestInit) => {
+				body = JSON.parse(String(init?.body));
+				return jsonResponse({ data: { id: "inv_1", status: "cancelled" } });
+			}),
+		);
+		await run("invoices", "cancel", "inv_1", "--reason", "other", "--json");
+		expect(body).toEqual({ reason: "other" });
+		expect(JSON.parse(stdout.join("")).status).toBe("cancelled");
+	});
+
+	it("rejects an unknown --reason without calling the API", async () => {
+		const fetchMock = vi.fn();
+		vi.stubGlobal("fetch", fetchMock);
+		await expect(run("invoices", "cancel", "inv_1", "--reason", "nope")).rejects.toThrow("exit:1");
+		expect(fetchMock).not.toHaveBeenCalled();
+		expect(stderr.join("")).toContain("--reason");
+	});
+
+	it("shows ERROR_INVOICE_NOT_CANCELLABLE on stderr and exits 1", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () =>
+				jsonResponse(
+					{ statusCode: 409, code: "ERROR_INVOICE_NOT_CANCELLABLE", message: "not cancellable" },
+					{ status: 409 },
+				),
+			),
+		);
+		await expect(run("invoices", "cancel", "inv_1", "--reason", "issue_error")).rejects.toThrow(
+			"exit:1",
+		);
+		expect(stderr.join("")).toContain("ERROR_INVOICE_NOT_CANCELLABLE");
+	});
 });

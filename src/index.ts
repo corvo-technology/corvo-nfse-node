@@ -19,19 +19,22 @@ export type {
 	TaxRegime,
 } from "./types/company";
 export type { Certificate, CertificateUploadParams } from "./types/certificate";
-export type {
-	CalculatedTax,
-	CalculatedTaxAmount,
-	Invoice,
-	InvoiceCalculation,
-	InvoiceCreateParams,
-	InvoiceCustomerInput,
-	InvoiceDownloadUrl,
-	InvoiceEmailResult,
-	InvoiceEvent,
-	InvoiceListParams,
-	InvoiceStage,
-	InvoiceStatus,
+export {
+	INVOICE_CANCELLATION_REASONS,
+	type CalculatedTax,
+	type CalculatedTaxAmount,
+	type Invoice,
+	type InvoiceCalculation,
+	type InvoiceCancellationReason,
+	type InvoiceCancelParams,
+	type InvoiceCreateParams,
+	type InvoiceCustomerInput,
+	type InvoiceDownloadUrl,
+	type InvoiceEmailResult,
+	type InvoiceEvent,
+	type InvoiceListParams,
+	type InvoiceStage,
+	type InvoiceStatus,
 } from "./types/invoice";
 export {
 	WEBHOOK_EVENTS,

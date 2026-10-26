@@ -124,6 +124,38 @@ const { data: pdf, error } = await corvo.invoices.pdf(invoice.id);
 if (!error) writeFileSync("nfse.pdf", pdf.buffer); // also pdf.mimeType and pdf.fileName
 ```
 
+### Cancel an invoice
+
+```ts
+const { data: invoice, error } = await corvo.invoices.cancel(invoiceId, {
+  reason: "issue_error", // "issue_error" | "service_not_provided" | "other"
+  description: "Wrong amount on the invoice", // 15-255 chars; optional only for a queued invoice
+});
+if (error) throw error; // e.g. 409 ERROR_INVOICE_NOT_CANCELLABLE, 422 invalid description
+```
+
+The reasons are also exported as `INVOICE_CANCELLATION_REASONS`. What comes back depends on the invoice:
+
+- `queued`: cancelled at once, `status: "cancelled"` with `cancelledAt` set (HTTP 200).
+- `authorized`: `status: "cancelling"` while the cancellation is processed at the Sefin (HTTP 202). Issuance credit is not refunded.
+- `processing`: stays `processing` with `cancellationRequestedAt` set and is cancelled once authorized (HTTP 202).
+- `retry_pending`, `reconciliation_required`, `manual_review`: `{ error }` with code `ERROR_INVOICE_NOT_CANCELLABLE` (409).
+
+Repeating the call returns the current state. To learn the outcome, read the invoice again (or listen to the `nfse.invoice.cancelled` and `nfse.invoice.cancellation_rejected` webhooks):
+
+```ts
+const { data: current } = await corvo.invoices.get(invoiceId);
+if (current?.status === "cancelled") {
+  console.log("cancelled at", current.cancelledAt);
+} else if (current?.status === "cancelling") {
+  // still being processed, check again later
+} else if (current?.status === "authorized" && current.lastErrorCode) {
+  console.log("cancellation rejected:", current.lastErrorMessage);
+}
+```
+
+The invoice also carries `cancellationReason`, `cancellationDescription`, `cancelledAt` and `cancellationRequestedAt` (all `null` until a cancellation is requested).
+
 ### Verify webhook signatures
 
 ```ts
@@ -147,7 +179,7 @@ app.post("/webhooks", express.raw({ type: "application/json" }), (req, res) => {
 | --- | --- |
 | `corvo.companies` | `create`, `list`, `iterate`, `get`, `update`, `remove` |
 | `corvo.certificates` | `upload`, `list`, `remove` |
-| `corvo.invoices` | `create`, `calculate`, `list`, `iterate`, `get`, `events`, `pdf`, `xml`, `downloadUrl`, `sendEmail` |
+| `corvo.invoices` | `create`, `calculate`, `list`, `iterate`, `get`, `events`, `pdf`, `xml`, `downloadUrl`, `sendEmail`, `cancel` |
 | `corvo.webhooks` | `list`, `iterate`, `create`, `remove`, `test`, `deliveries.list`, `deliveries.iterate`, `deliveries.stats`, `deliveries.retry` |
 | `corvo.credits` | `balance`, `plans`, `history`, `iterateHistory` |
 | `corvo.billing` | `plan`, `usage` |
@@ -165,6 +197,7 @@ corvo companies list --json
 corvo invoices calculate --file nota.json
 corvo invoices create --file nota.json --idempotency-key order-1 --email
 corvo invoices pdf <id> -o nota.pdf
+corvo invoices cancel <id> --reason issue_error --description "Wrong amount on the invoice"
 corvo webhooks deliveries stats --hours 24
 corvo credits balance
 corvo billing usage

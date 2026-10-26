@@ -4,6 +4,7 @@ import type { Paginated } from "../types/common";
 import type {
 	Invoice,
 	InvoiceCalculation,
+	InvoiceCancelParams,
 	InvoiceCreateParams,
 	InvoiceDownloadUrl,
 	InvoiceEmailResult,
@@ -92,6 +93,21 @@ export class InvoicesResource {
 			method: "POST",
 			path: `/invoices/${encodeURIComponent(id)}/email`,
 			idempotencyKey: options.idempotencyKey,
+		});
+	}
+
+	/**
+	 * Cancel an invoice (`POST /invoices/{id}/cancel`). A queued invoice is cancelled at once
+	 * (`status: "cancelled"`); an authorized one moves to `cancelling` while the cancellation is
+	 * processed, and a processing one keeps `processing` with `cancellationRequestedAt` set.
+	 * Call `get` later to see the outcome: `cancelled` when done, or back to `authorized` with
+	 * `lastErrorCode` when the cancellation was rejected.
+	 */
+	cancel(id: string, params: InvoiceCancelParams): Promise<Result<Invoice>> {
+		return this.http.request<Invoice>({
+			method: "POST",
+			path: `/invoices/${encodeURIComponent(id)}/cancel`,
+			body: params,
 		});
 	}
 
