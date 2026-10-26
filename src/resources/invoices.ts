@@ -3,6 +3,8 @@ import { type DownloadedFile, type HttpTransport, type Query, mapPlain } from ".
 import type { Paginated } from "../types/common";
 import type {
 	Invoice,
+	InvoiceBatchItem,
+	InvoiceBatchSummary,
 	InvoiceCalculation,
 	InvoiceCancelParams,
 	InvoiceCreateParams,
@@ -28,6 +30,21 @@ export class InvoicesResource {
 			path: "/invoices",
 			body: params,
 			idempotencyKey: options.idempotencyKey,
+		});
+	}
+
+	/**
+	 * Request the issuance of 1 to 50 invoices in one call (`POST /invoices/batches`), for one
+	 * company or several. Items are checked one by one: valid ones are saved together, invalid ones
+	 * come back `rejected` with the reason and are not saved. Match `results[].index` to the item
+	 * you sent, fix only the rejected ones and send them again. Send an `idempotencyKey` per item: the
+	 * `Idempotency-Key` header is not used by this route.
+	 */
+	createBatch(invoices: InvoiceBatchItem[]): Promise<Result<InvoiceBatchSummary>> {
+		return this.http.request<InvoiceBatchSummary>({
+			method: "POST",
+			path: "/invoices/batches",
+			body: { invoices },
 		});
 	}
 

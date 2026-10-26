@@ -62,8 +62,14 @@ export interface InvoiceCreateParams {
 	amount: number;
 	/** `YYYY-MM-DD`. A future date needs `options.type: "SCHEDULE"`. */
 	competenceDate: string;
-	/** Unconditional discount in BRL, from 0 up to `amount`. */
+	/** Unconditional discount in BRL, from 0 up to `amount`, at most 2 decimal places. */
 	discount?: number;
+	/**
+	 * Deduction from the ISS base declared by the issuer, in BRL: greater than 0 and less than
+	 * `amount` minus `discount`, at most 2 decimal places (`0` is the same as omitting it). The
+	 * invoice is still issued for the full amount; the issuer is responsible for the declared value.
+	 */
+	deduction?: number;
 	/** Request the email notification (default `false`). `options.email.send` wins when set. */
 	email?: boolean;
 	options?: {
@@ -91,6 +97,10 @@ export interface Invoice {
 	serviceSnapshot: { code?: string; description?: string; municipalityCode?: string };
 	taxSnapshot: Record<string, unknown>;
 	amount: number;
+	/** Unconditional discount, when one was declared. */
+	discount?: number;
+	/** Deduction from the ISS base, when one was declared. */
+	deduction?: number;
 	currency: string;
 	competenceDate: string;
 	dpsId: string | null;
@@ -122,6 +132,38 @@ export interface Invoice {
 	cancelledAt: string | null;
 	/** When the cancellation was requested (ISO). */
 	cancellationRequestedAt: string | null;
+}
+
+/** One item of `invoices.createBatch`: the fields of `InvoiceCreateParams` plus its own idempotency key. */
+export interface InvoiceBatchItem extends InvoiceCreateParams {
+	/** Up to 255 characters. Repeating it with the same content returns the saved invoice with `replayed: true`. */
+	idempotencyKey?: string;
+}
+
+export interface InvoiceBatchError {
+	code: string;
+	message: string;
+	details?: unknown;
+}
+
+export interface InvoiceBatchResult {
+	/** Position of the item in the request, starting at 0. */
+	index: number;
+	status: "accepted" | "rejected";
+	/** `true` when the item repeated an `idempotencyKey` already saved with the same content. */
+	replayed?: true;
+	/** Present when `status` is `accepted`. */
+	invoice?: Invoice;
+	/** Present when `status` is `rejected`; rejected items are not saved. */
+	error?: InvoiceBatchError;
+}
+
+export interface InvoiceBatchSummary {
+	total: number;
+	accepted: number;
+	rejected: number;
+	/** One entry per item, in the order sent. */
+	results: InvoiceBatchResult[];
 }
 
 export interface InvoiceEvent {

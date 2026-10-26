@@ -1,4 +1,5 @@
-export type TaxRegime = "MEI" | "Simples Nacional" | "Lucro Presumido" | "Lucro Real";
+/** Corvo serves only these two regimes; any other value returns `422` `ERROR_TAX_REGIME_NOT_SUPPORTED`. */
+export type TaxRegime = "MEI" | "Simples Nacional";
 
 export interface CompanyAddressInput {
 	street?: string;
@@ -28,6 +29,13 @@ export interface CompanyCreateParams {
 	defaultServiceCode?: string;
 	simpleNational?: boolean;
 	specialRegime?: string;
+	/**
+	 * Required for `Simples Nacional`, ignored for `MEI`. Effective total rate (%) of your DAS, as in
+	 * the PGDAS-D, e.g. `"6.54"` (0 to 100, at most 2 decimals). Goes on every invoice.
+	 */
+	simplesRate?: string;
+	/** `Simples Nacional` only: effective ISS rate (%) of your bracket (1.80 to 5.00), needed when a customer withholds ISS. */
+	simplesIssRate?: string;
 	address?: CompanyAddressInput;
 }
 
@@ -41,6 +49,10 @@ export interface CompanyUpdateParams {
 	taxRegime?: TaxRegime;
 	simpleNational?: boolean;
 	specialRegime?: string;
+	/** Omit to keep the current value; send a new one to update it (for example, each month). Ignored for `MEI`. */
+	simplesRate?: string;
+	/** `null` removes it. */
+	simplesIssRate?: string | null;
 	address?: CompanyAddressInput | null;
 }
 
