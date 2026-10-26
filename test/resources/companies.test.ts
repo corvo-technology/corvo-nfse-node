@@ -44,6 +44,8 @@ describe("companies", () => {
 			legalName: company.legalName,
 			taxId: "41.834.687/0001-48",
 			taxRegime: "Simples Nacional",
+			simplesRate: "6.54",
+			simplesIssRate: "3.00",
 			municipalityCode: "3550308",
 			address: {
 				street: "Rua Exemplo",
@@ -60,6 +62,8 @@ describe("companies", () => {
 		expect(calls[0].init.method).toBe("POST");
 		const body = JSON.parse(String(calls[0].init.body));
 		expect(body.taxRegime).toBe("Simples Nacional");
+		expect(body.simplesRate).toBe("6.54");
+		expect(body.simplesIssRate).toBe("3.00");
 		expect(body.address.city).toBe("Uberlândia");
 	});
 

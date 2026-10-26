@@ -50,7 +50,8 @@ if (error) {
 const { data: company, error } = await corvo.companies.create({
   legalName: "Empresa Exemplo Ltda",
   taxId: "11222333000181",
-  taxRegime: "Simples Nacional", // "MEI" | "Simples Nacional" | "Lucro Presumido" | "Lucro Real"
+  taxRegime: "Simples Nacional", // "MEI" | "Simples Nacional" (the only regimes Corvo serves)
+  simplesRate: "6.54", // required for Simples Nacional: effective DAS rate (%), ignored for MEI
   municipalityCode: "3550308", // IBGE code, 7 digits
   defaultServiceCode: "010101", // optional: used when an invoice omits service.code
 });
@@ -102,6 +103,24 @@ const { data: invoice, error } = await corvo.invoices.create(
 ```
 
 Use `options: { type: "SCHEDULE" }` with a future `competenceDate` to schedule the issuance.
+
+To declare a deduction from the ISS base, send `deduction` (greater than 0 and less than `amount` minus `discount`). The invoice is still issued for the full `amount`, and you are responsible for the declared value.
+
+### Issue up to 50 invoices at once
+
+`createBatch` takes 1 to 50 items (they can belong to different companies). Items are checked one by one: valid ones are saved together, invalid ones come back `rejected` and are not saved. Send an `idempotencyKey` per item, so repeating the batch after a timeout returns the saved ones with `replayed: true`.
+
+```ts
+const { data: batch, error } = await corvo.invoices.createBatch([
+  { companyTaxId: "11222333000181", idempotencyKey: "sheet-row-2", service: { description: "Consultoria" }, amount: 150.5, competenceDate: "2026-10-16" },
+  { companyTaxId: "11222333000181", idempotencyKey: "sheet-row-3", service: { description: "Manutenção" }, amount: 300, competenceDate: "2026-10-16" },
+]);
+for (const item of batch?.results ?? []) {
+  if (item.status === "rejected") console.log(item.index, item.error?.code, item.error?.message);
+}
+```
+
+The route allows 10 batches per minute per tenant (`429` with `Retry-After`).
 
 ### Walk every page
 
@@ -179,7 +198,7 @@ app.post("/webhooks", express.raw({ type: "application/json" }), (req, res) => {
 | --- | --- |
 | `corvo.companies` | `create`, `list`, `iterate`, `get`, `update`, `remove` |
 | `corvo.certificates` | `upload`, `list`, `remove` |
-| `corvo.invoices` | `create`, `calculate`, `list`, `iterate`, `get`, `events`, `pdf`, `xml`, `downloadUrl`, `sendEmail`, `cancel` |
+| `corvo.invoices` | `create`, `createBatch`, `calculate`, `list`, `iterate`, `get`, `events`, `pdf`, `xml`, `downloadUrl`, `sendEmail`, `cancel` |
 | `corvo.webhooks` | `list`, `iterate`, `create`, `remove`, `test`, `deliveries.list`, `deliveries.iterate`, `deliveries.stats`, `deliveries.retry` |
 | `corvo.credits` | `balance`, `plans`, `history`, `iterateHistory` |
 | `corvo.billing` | `plan`, `usage` |
@@ -196,6 +215,7 @@ corvo config set baseUrl https://api.corvo.tech      # optional
 corvo companies list --json
 corvo invoices calculate --file nota.json
 corvo invoices create --file nota.json --idempotency-key order-1 --email
+corvo invoices batch --file lote.json   # { "invoices": [ ...up to 50 ] }
 corvo invoices pdf <id> -o nota.pdf
 corvo invoices cancel <id> --reason issue_error --description "Wrong amount on the invoice"
 corvo webhooks deliveries stats --hours 24

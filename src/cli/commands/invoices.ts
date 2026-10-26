@@ -86,6 +86,21 @@ export function registerInvoices(program: Command): void {
 		});
 
 	commonOptions(
+		invoices.command("batch").description("Issue up to 50 invoices from a JSON file shaped { "invoices": [...] }"),
+	)
+		.option("--file <path>", "JSON file with the invoices (- for stdin)")
+		.action(async function (this: Command) {
+			const opts = this.opts() as CliOptions;
+			const payload = await readPayload(opts.file);
+			const items = payload.invoices;
+			if (!Array.isArray(items)) failFatal('The payload must be { "invoices": [...] }');
+			const client = buildClient(opts);
+			const result = await client.invoices.createBatch(items as never);
+			if (result.error) fail(result.error, Boolean(opts.json));
+			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
+		});
+
+	commonOptions(
 		invoices.command("calculate").description("Estimate the taxes of an invoice without issuing"),
 	)
 		.option("--file <path>", "JSON file with the invoice payload (- for stdin)")
