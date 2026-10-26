@@ -86,7 +86,9 @@ export function registerInvoices(program: Command): void {
 		});
 
 	commonOptions(
-		invoices.command("batch").description("Issue up to 50 invoices from a JSON file shaped { "invoices": [...] }"),
+		invoices
+			.command("batch")
+			.description("Issue up to 50 invoices from a JSON file with an invoices array"),
 	)
 		.option("--file <path>", "JSON file with the invoices (- for stdin)")
 		.action(async function (this: Command) {
