@@ -133,17 +133,16 @@ describe("cli credits, billing and health", () => {
 			vi.fn(async () =>
 				jsonResponse({
 					data: {
-						tenantId: "t1",
-						balance: 200,
-						overageUnits: 0,
-						overageAmountCents: 0,
+						balance: 205,
+						planRemaining: 200,
+						avulsoBalance: 5,
 						hardLimit: 1000,
 					},
 				}),
 			),
 		);
 		await run("credits", "balance", "--json");
-		expect(JSON.parse(stdout.join("")).balance).toBe(200);
+		expect(JSON.parse(stdout.join("")).balance).toBe(205);
 	});
 
 	it("lists plans as a table", async () => {
@@ -182,5 +181,74 @@ describe("cli credits, billing and health", () => {
 		);
 		await run("health", "live", "--json");
 		expect(JSON.parse(stdout.join("")).status).toBe("ok");
+	});
+});
+
+describe("cli new commands (0.3.0)", () => {
+	function stubFetch(body: unknown, capture?: (url: string, init?: RequestInit) => void): void {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (url: string, init?: RequestInit) => {
+				capture?.(url, init);
+				return jsonResponse(body);
+			}),
+		);
+	}
+
+	it("cnpj looks the CNPJ up", async () => {
+		let called = "";
+		stubFetch({ data: { legalName: "ACME" } }, (url) => {
+			called = url;
+		});
+		await run("cnpj", "11222333000181", "--json");
+		expect(called).toBe(`${BASE_URL}/v1/cnpj/11222333000181`);
+		expect(JSON.parse(stdout.join("")).legalName).toBe("ACME");
+	});
+
+	it("customers search passes the filter", async () => {
+		let called = "";
+		stubFetch({ data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } }, (url) => {
+			called = url;
+		});
+		await run("customers", "search", "--search", "ana", "--json");
+		expect(called).toBe(`${BASE_URL}/v1/customers?search=ana`);
+	});
+
+	it("credits preview sends units", async () => {
+		let called = "";
+		stubFetch({ data: { units: 5, unitPriceCents: 99, totalCents: 495 } }, (url) => {
+			called = url;
+		});
+		await run("credits", "preview", "--units", "5");
+		expect(called).toBe(`${BASE_URL}/v1/credits/purchase/preview?units=5`);
+		expect(stdout.join("")).toContain("495");
+	});
+
+	it("schedules pause is a POST", async () => {
+		let method = "";
+		stubFetch({ data: { id: "s1", status: "paused" } }, (_url, init) => {
+			method = String(init?.method);
+		});
+		await run("schedules", "pause", "s1", "--json");
+		expect(method).toBe("POST");
+		expect(JSON.parse(stdout.join("")).status).toBe("paused");
+	});
+
+	it("invoices email --to sends the destination", async () => {
+		let body: unknown;
+		stubFetch({ data: { emailId: "e1", status: "queued" } }, (_url, init) => {
+			body = JSON.parse(String(init?.body));
+		});
+		await run("invoices", "email", "inv_1", "--to", "x@y.com", "--json");
+		expect(body).toEqual({ email: "x@y.com" });
+	});
+
+	it("invoices list --customer-tax-id filters", async () => {
+		let called = "";
+		stubFetch({ data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } }, (url) => {
+			called = url;
+		});
+		await run("invoices", "list", "--customer-tax-id", "12345678909", "--json");
+		expect(called).toContain("customerTaxId=12345678909");
 	});
 });

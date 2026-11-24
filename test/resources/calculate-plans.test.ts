@@ -39,6 +39,28 @@ describe("invoices.calculate", () => {
 		expect(calls[0].init.method).toBe("POST");
 	});
 
+	it("accepts null classification, applicability and calculation", async () => {
+		const corvo = client(async () =>
+			jsonResponse({
+				data: {
+					status: "blocked",
+					classification: null,
+					applicability: null,
+					calculation: null,
+					blocking: null,
+				},
+			}),
+		);
+		const res = await corvo.invoices.calculate({
+			companyTaxId: "11222333000181",
+			service: {},
+			amount: 10,
+			competenceDate: "2026-10-16",
+		});
+		expect(res.data?.classification).toBeNull();
+		expect(res.data?.calculation).toBeNull();
+	});
+
 	it("returns a blocked estimate as data, not as an error", async () => {
 		const corvo = client(async () =>
 			jsonResponse({
@@ -63,16 +85,25 @@ describe("invoices.calculate", () => {
 describe("plans (public catalog)", () => {
 	it("list returns a cursor page of price quotes", async () => {
 		const corvo = client(async (url) => {
-			expect(url).toBe(`${BASE_URL}/v1/plans?limit=5`);
+			expect(url).toBe(`${BASE_URL}/v1/plans?limit=5&cycle=annual`);
 			return jsonResponse({
 				data: [
-					{ slug: "developer", monthlyAllowance: 200, monthlyTotalCents: 2990, currency: "BRL" },
+					{
+						slug: "solo",
+						name: "Solo",
+						monthlyAllowance: 100,
+						basePriceCents: 9900,
+						monthlyEquivalentCents: 9900,
+						chargeTotalCents: 9900,
+						currency: "BRL",
+					},
 				],
 				pagination: { limit: 5, hasMore: false, nextCursor: null },
 			});
 		});
-		const res = await corvo.plans.list({ limit: 5 });
-		expect(res.data?.data[0].slug).toBe("developer");
+		const res = await corvo.plans.list({ limit: 5, cycle: "annual" });
+		expect(res.data?.data[0].slug).toBe("solo");
+		expect(res.data?.data[0].chargeTotalCents).toBe(9900);
 	});
 
 	it("get and quote hit the right paths", async () => {
@@ -83,10 +114,10 @@ describe("plans (public catalog)", () => {
 				data: url.includes("quote") ? { recommended_plan: "volume" } : { slug: "growth" },
 			});
 		});
-		expect((await corvo.plans.get("growth")).data?.slug).toBe("growth");
+		expect((await corvo.plans.get("growth", { cycle: "annual" })).data?.slug).toBe("growth");
 		expect((await corvo.plans.quote(20000)).data?.recommended_plan).toBe("volume");
 		expect(urls).toEqual([
-			`${BASE_URL}/v1/plans/growth`,
+			`${BASE_URL}/v1/plans/growth?cycle=annual`,
 			`${BASE_URL}/v1/plans/quote?volume=20000`,
 		]);
 	});

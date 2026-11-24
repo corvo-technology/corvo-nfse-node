@@ -1,24 +1,27 @@
 import type { Result } from "../error";
 import { type HttpTransport, mapPlain } from "../transport";
 import type { Paginated } from "../types/common";
-import type { PlanQuote, PlanRecommendation } from "../types/credits";
+import type { PlanCycle, PlanQuote, PlanRecommendation } from "../types/credits";
 
 /** Public price catalog: it works without an API key being tied to any account data. */
 export class PlansResource {
 	constructor(private readonly http: HttpTransport) {}
 
-	list(params: { limit?: number; cursor?: string } = {}): Promise<Result<Paginated<PlanQuote>>> {
+	list(
+		params: { limit?: number; cursor?: string; cycle?: PlanCycle } = {},
+	): Promise<Result<Paginated<PlanQuote>>> {
 		return this.http.list<PlanQuote>(
 			"/plans",
-			{ limit: params.limit, cursor: params.cursor },
+			{ limit: params.limit, cursor: params.cursor, cycle: params.cycle },
 			mapPlain,
 		);
 	}
 
-	get(slug: string): Promise<Result<PlanQuote>> {
+	get(slug: string, params: { cycle?: PlanCycle } = {}): Promise<Result<PlanQuote>> {
 		return this.http.request<PlanQuote>({
 			method: "GET",
 			path: `/plans/${encodeURIComponent(slug)}`,
+			query: { cycle: params.cycle },
 		});
 	}
 

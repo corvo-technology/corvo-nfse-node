@@ -1,64 +1,35 @@
-export interface CreditBalance {
-	tenantId: string;
-	balance: number;
-	overageUnits: number;
-	overageAmountCents: number;
-	hardLimit: number | null;
-}
+import type {
+	CreditBalance as CreditBalanceSchema,
+	CreditTransaction as CreditTransactionSchema,
+	Plan,
+	PlanPrice,
+	PurchasePreview,
+} from "./openapi";
 
-export interface CreditPlan {
-	id: string;
-	slug: "free" | "developer" | "growth" | "scale" | "volume";
-	name: string;
-	description: string;
-	monthlyCreditAllowance: number;
-	dailyLimit: number | null;
-	maxActiveCompanies: number;
-	creditUnitPriceCents: number;
-	throughputRps: number;
-	includesWebhooks: boolean;
-	includesXmlDownload: boolean;
-	includesPdfDownload: boolean;
-	includesApiKeys: boolean;
-	supportTier: "community" | "email" | "priority";
-	active: boolean;
-	createdAt: string;
-	updatedAt: string;
-}
+/**
+ * `balance` is the plan notes left (`planRemaining`) plus the loose notes bought separately
+ * (`avulsoBalance`). There is no overage billing.
+ */
+export type CreditBalance = CreditBalanceSchema;
+
+/** `slug` is `free`, `self-hosted`, `solo`, `equipe`, `empresa` or `escala`; treat it as open. */
+export type CreditPlan = Plan;
 
 /** `amount` is in credits, not BRL; fields ending in `Cents` are in centavos. */
-export interface CreditTransaction {
-	id: string;
-	tenantId: string;
-	type: string;
-	amount: number;
-	description?: string;
-	source?: "subscription" | "avulso" | "bonus";
-	amountBrlCents?: number;
-	unitPriceCentsApplied?: number;
-	planIdSnapshot?: string;
-	reservedInvoiceId?: string;
-	periodId?: string;
-	isReservation?: boolean;
-	relatedTransactionId?: string;
-	createdAt: string;
-}
+export type CreditTransaction = CreditTransactionSchema;
 
 export interface CreditHistoryParams {
 	limit?: number;
 	cursor?: string;
 }
 
-/** Public catalog entry (`GET /plans`): prices in centavos, monthly cycle only. */
-export interface PlanQuote {
-	slug: string;
-	name: string;
-	monthlyAllowance: number;
-	basePriceCents: number;
-	perCreditOverageCents: number;
-	monthlyTotalCents: number;
-	currency: "BRL";
-}
+/** `GET /credits/purchase/preview?units=N`: R$ 0,99 each, at least 3 notes. */
+export type CreditPurchasePreview = PurchasePreview;
+
+/** Public catalog entry (`GET /plans`, no API key): prices in centavos for the chosen billing cycle. */
+export type PlanQuote = PlanPrice;
+
+export type PlanCycle = "monthly" | "annual";
 
 /** Recommendation for a monthly volume (`GET /plans/quote`). Note the snake_case keys. */
 export interface PlanRecommendation {
@@ -66,8 +37,8 @@ export interface PlanRecommendation {
 	recommended_plan: string;
 	plan_name: string;
 	monthly_allowance: number;
-	overage_credits: number;
-	overage_cost_cents: number;
+	overage_credits?: number;
+	overage_cost_cents?: number;
 	base_price_cents: number;
 	total_estimated_cents: number;
 	currency: "BRL";

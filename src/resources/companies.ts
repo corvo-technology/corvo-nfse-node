@@ -2,6 +2,12 @@ import type { Result } from "../error";
 import { type HttpTransport, type Query, mapPlain } from "../transport";
 import type { Paginated } from "../types/common";
 import type { Company, CompanyCreateParams, CompanyUpdateParams } from "../types/company";
+import { AccountantPackageResource } from "./accountant-package";
+import { DpsSequenceResource } from "./dps-sequence";
+import { FiscalProfilesResource } from "./fiscal-profiles";
+import { InvoicePackageResource } from "./invoice-package";
+import { ServiceFavoritesResource } from "./service-favorites";
+import { ServiceTaxProfilesResource } from "./service-tax-profiles";
 
 export interface CompanyListParams {
 	limit?: number;
@@ -13,7 +19,21 @@ function listQuery(params: CompanyListParams): Query {
 }
 
 export class CompaniesResource {
-	constructor(private readonly http: HttpTransport) {}
+	readonly accountantPackage: AccountantPackageResource;
+	readonly dpsSequence: DpsSequenceResource;
+	readonly fiscalProfiles: FiscalProfilesResource;
+	readonly invoicePackage: InvoicePackageResource;
+	readonly serviceFavorites: ServiceFavoritesResource;
+	readonly serviceTaxProfiles: ServiceTaxProfilesResource;
+
+	constructor(private readonly http: HttpTransport) {
+		this.accountantPackage = new AccountantPackageResource(http);
+		this.dpsSequence = new DpsSequenceResource(http);
+		this.fiscalProfiles = new FiscalProfilesResource(http);
+		this.invoicePackage = new InvoicePackageResource(http);
+		this.serviceFavorites = new ServiceFavoritesResource(http);
+		this.serviceTaxProfiles = new ServiceTaxProfilesResource(http);
+	}
 
 	create(params: CompanyCreateParams): Promise<Result<Company>> {
 		return this.http.request<Company>({ method: "POST", path: "/companies", body: params });
@@ -42,8 +62,8 @@ export class CompaniesResource {
 		});
 	}
 
-	remove(id: string): Promise<Result<null>> {
-		return this.http.request<null>({
+	remove(id: string): Promise<Result<Record<string, unknown> | null>> {
+		return this.http.request<Record<string, unknown> | null>({
 			method: "DELETE",
 			path: `/companies/${encodeURIComponent(id)}`,
 		});

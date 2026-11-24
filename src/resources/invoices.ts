@@ -11,21 +11,51 @@ import type {
 	InvoiceDownloadUrl,
 	InvoiceEmailResult,
 	InvoiceEvent,
+	InvoiceImmediateCreateParams,
 	InvoiceListParams,
+	InvoiceOverview,
+	InvoiceReviewParams,
+	InvoiceReviewResult,
+	InvoiceScheduleCreateParams,
+	InvoiceSubstituteParams,
 } from "../types/invoice";
+import type { Schedule } from "../types/schedule";
 
 export interface InvoiceIdempotencyOptions {
 	idempotencyKey?: string;
 }
 
+export interface InvoiceEmailOptions extends InvoiceIdempotencyOptions {
+	/** Send to this address instead of the customer's. */
+	email?: string;
+}
+
 export class InvoicesResource {
 	constructor(private readonly http: HttpTransport) {}
 
+	/**
+	 * Issue an invoice, or schedule one (`POST /invoices`). With `options.type` `IMMEDIATE` (the
+	 * default) the answer is the queued `Invoice`; with `SCHEDULE` or `RECURRING` it is the
+	 * `Schedule` (snake_case fields), and the note only exists when the schedule runs. Use
+	 * `isSchedule` to tell the two apart when the type is not known at compile time.
+	 */
+	create(
+		params: InvoiceScheduleCreateParams,
+		options?: InvoiceIdempotencyOptions,
+	): Promise<Result<Schedule>>;
+	create(
+		params: InvoiceImmediateCreateParams,
+		options?: InvoiceIdempotencyOptions,
+	): Promise<Result<Invoice>>;
+	create(
+		params: InvoiceCreateParams,
+		options?: InvoiceIdempotencyOptions,
+	): Promise<Result<Invoice | Schedule>>;
 	create(
 		params: InvoiceCreateParams,
 		options: InvoiceIdempotencyOptions = {},
-	): Promise<Result<Invoice>> {
-		return this.http.request<Invoice>({
+	): Promise<Result<Invoice | Schedule>> {
+		return this.http.request<Invoice | Schedule>({
 			method: "POST",
 			path: "/invoices",
 			body: params,
@@ -102,14 +132,51 @@ export class InvoicesResource {
 		});
 	}
 
-	sendEmail(
-		id: string,
-		options: InvoiceIdempotencyOptions = {},
-	): Promise<Result<InvoiceEmailResult>> {
+	/** Request the invoice e-mail (`POST /invoices/{id}/email`), to the customer or to `options.email`. */
+	sendEmail(id: string, options: InvoiceEmailOptions = {}): Promise<Result<InvoiceEmailResult>> {
 		return this.http.request<InvoiceEmailResult>({
 			method: "POST",
 			path: `/invoices/${encodeURIComponent(id)}/email`,
+			body: options.email !== undefined ? { email: options.email } : undefined,
 			idempotencyKey: options.idempotencyKey,
+		});
+	}
+
+	/**
+	 * Replace an authorized invoice with a corrected one (`POST /invoices/{id}/substitute`): only
+	 * `description` (why), `service.description`, `purchaseOrder` and `notes` can change.
+	 */
+	substitute(
+		id: string,
+		params: InvoiceSubstituteParams,
+		options: InvoiceIdempotencyOptions = {},
+	): Promise<Result<Invoice>> {
+		return this.http.request<Invoice>({
+			method: "POST",
+			path: `/invoices/${encodeURIComponent(id)}/substitute`,
+			body: params,
+			idempotencyKey: options.idempotencyKey,
+		});
+	}
+
+	/** Counts and daily activity of the key's environment (`GET /invoices/overview`). */
+	overview(params: { period?: "7d" | "30d" } = {}): Promise<Result<InvoiceOverview>> {
+		return this.http.request<InvoiceOverview>({
+			method: "GET",
+			path: "/invoices/overview",
+			query: { period: params.period },
+		});
+	}
+
+	/**
+	 * Resolve invoices in `manual_review` (up to 100): `retry` sends the same DPS again, `discard`
+	 * rejects it once the portal confirms the DPS was never registered.
+	 */
+	review(params: InvoiceReviewParams): Promise<Result<InvoiceReviewResult>> {
+		return this.http.request<InvoiceReviewResult>({
+			method: "POST",
+			path: "/invoices/review",
+			body: params,
 		});
 	}
 
@@ -135,6 +202,7 @@ export class InvoicesResource {
 			from: params.from,
 			to: params.to,
 			externalId: params.externalId,
+			customerTaxId: params.customerTaxId,
 			limit: params.limit,
 			cursor: params.cursor,
 		};

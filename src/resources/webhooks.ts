@@ -8,6 +8,7 @@ import type {
 	WebhookDeliveryListParams,
 	WebhookDeliveryStats,
 	WebhookListParams,
+	WebhookTestResult,
 	WebhookWithSecret,
 } from "../types/webhook";
 
@@ -34,8 +35,8 @@ class DeliveriesResource {
 		});
 	}
 
-	retry(deliveryId: string): Promise<Result<{ retried: boolean }>> {
-		return this.http.request<{ retried: boolean }>({
+	retry(deliveryId: string): Promise<Result<{ retried: true }>> {
+		return this.http.request<{ retried: true }>({
 			method: "POST",
 			path: `/webhooks/deliveries/${encodeURIComponent(deliveryId)}/retry`,
 		});
@@ -82,15 +83,16 @@ export class WebhooksResource {
 		});
 	}
 
-	remove(id: string): Promise<Result<{ deleted: boolean }>> {
-		return this.http.request<{ deleted: boolean }>({
+	remove(id: string): Promise<Result<{ deleted: true }>> {
+		return this.http.request<{ deleted: true }>({
 			method: "DELETE",
 			path: `/webhooks/${encodeURIComponent(id)}`,
 		});
 	}
 
-	test(id: string): Promise<Result<{ sent: boolean }>> {
-		return this.http.request<{ sent: boolean }>({
+	/** `data.sent` is `false` (with `error` and `statusCode`) when your endpoint did not accept the event. */
+	test(id: string): Promise<Result<WebhookTestResult>> {
+		return this.http.request<WebhookTestResult>({
 			method: "POST",
 			path: `/webhooks/${encodeURIComponent(id)}/test`,
 		});

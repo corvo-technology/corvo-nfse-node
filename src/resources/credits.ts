@@ -5,6 +5,7 @@ import type {
 	CreditBalance,
 	CreditHistoryParams,
 	CreditPlan,
+	CreditPurchasePreview,
 	CreditTransaction,
 } from "../types/credits";
 
@@ -13,6 +14,15 @@ export class CreditsResource {
 
 	balance(): Promise<Result<CreditBalance>> {
 		return this.http.request<CreditBalance>({ method: "GET", path: "/credits" });
+	}
+
+	/** Price a one-off purchase of `units` notes (R$ 0,99 each, at least 3, whole numbers). */
+	previewPurchase(units: number): Promise<Result<CreditPurchasePreview>> {
+		return this.http.request<CreditPurchasePreview>({
+			method: "GET",
+			path: "/credits/purchase/preview",
+			query: { units },
+		});
 	}
 
 	plans(params: { limit?: number; cursor?: string } = {}): Promise<Result<Paginated<CreditPlan>>> {

@@ -1,3 +1,14 @@
+import type {
+	CreateWebhookConfig,
+	WebhookDelivery as WebhookDeliverySchema,
+	WebhookEventType,
+	Webhook as WebhookSchema,
+	WebhookStats,
+	WebhookTestResult as WebhookTestResultSchema,
+	WebhookWithSecret as WebhookWithSecretSchema,
+} from "./openapi";
+
+/** The 12 event types of the contract. */
 export const WEBHOOK_EVENTS = [
 	"nfse.invoice.authorized",
 	"nfse.invoice.rejected",
@@ -10,59 +21,26 @@ export const WEBHOOK_EVENTS = [
 	"nfse.invoice.fiscal_discrepancy",
 	"nfse.invoice.cancelled",
 	"nfse.invoice.cancellation_rejected",
-] as const;
+	"nfse.invoice.taker_rejected",
+] as const satisfies readonly WebhookEventType[];
 
 /** Events you can subscribe to. `webhook.test` is only sent by `webhooks.test()` and cannot be subscribed. */
-export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+export type WebhookEvent = WebhookEventType;
 
-export interface Webhook {
-	id: string;
-	url: string;
-	events: WebhookEvent[];
-	active: boolean;
-	createdAt: string;
-	updatedAt: string;
-}
-
-export interface WebhookWithSecret extends Webhook {
-	secret: string;
-}
-
-export interface WebhookCreateParams {
-	url: string;
-	events: WebhookEvent[];
-}
+/**
+ * `environment` is `test` or `live`: a webhook created with an API key is tied to that key's
+ * environment and only receives its events (`null` for older ones).
+ */
+export type Webhook = WebhookSchema;
+export type WebhookWithSecret = WebhookWithSecretSchema;
+export type WebhookCreateParams = CreateWebhookConfig;
+export type WebhookDelivery = WebhookDeliverySchema;
+export type WebhookDeliveryStats = WebhookStats;
+export type WebhookTestResult = WebhookTestResultSchema;
 
 export interface WebhookListParams {
 	limit?: number;
 	cursor?: string;
-}
-
-export interface WebhookDelivery {
-	id: string;
-	tenantId: string;
-	webhookConfigId: string;
-	eventType: string;
-	environment: "test" | "live";
-	url: string;
-	payload?: Record<string, unknown>;
-	statusCode?: number | null;
-	responseBody?: unknown;
-	errorMessage?: string | null;
-	status: "pending" | "sent" | "delayed" | "failed" | "manual_retry";
-	durationMs?: number | null;
-	retryCount: number;
-	nextRetryAt?: string | null;
-	lastError?: string | null;
-	createdAt: string;
-}
-
-export interface WebhookDeliveryStats {
-	total: number;
-	sent: number;
-	failed: number;
-	pending: number;
-	delayed: number;
 }
 
 export interface WebhookDeliveryListParams {

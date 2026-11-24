@@ -1,5 +1,6 @@
 import { CorvoApiError, type CorvoErrorDetail, type Result } from "./error";
 import type { Paginated } from "./types/common";
+import { VERSION } from "./version";
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -17,7 +18,7 @@ export type Query = Record<string, string | number | undefined>;
 export type Unwrap = "data" | "none";
 
 export interface RequestOptions {
-	method: "GET" | "POST" | "PATCH" | "DELETE";
+	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 	path: string;
 	query?: Query;
 	body?: unknown;
@@ -112,6 +113,7 @@ export class HttpTransport {
 		const headers: Record<string, string> = {
 			"X-API-Key": this.apiKey,
 			Accept: "application/json",
+			"User-Agent": `corvo-nfse-node/${VERSION}`,
 		};
 		let body: RequestInit["body"];
 		if (options.body instanceof FormData) {

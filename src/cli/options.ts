@@ -23,6 +23,14 @@ export interface CliOptions {
 	events?: string;
 	reason?: string;
 	description?: string;
+	customerTaxId?: string;
+	search?: string;
+	month?: string;
+	include?: string;
+	units?: string;
+	period?: string;
+	sendEmail?: boolean;
+	line?: string;
 }
 
 export function commonOptions(command: Command): Command {

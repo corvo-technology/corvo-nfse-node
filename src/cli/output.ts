@@ -1,4 +1,4 @@
-import type { CorvoApiError } from "../error";
+import type { CorvoApiError, Result } from "../error";
 import type { Paginated } from "../types/common";
 
 export function formatTable(rows: Array<Record<string, unknown>>): string {
@@ -71,4 +71,10 @@ export async function readStdin(): Promise<string> {
 		chunks.push(Buffer.from(chunk));
 	}
 	return Buffer.concat(chunks).toString("utf8");
+}
+
+/** Prints `data` as JSON, or exits with the API error. */
+export function printResult<T>(result: Result<T>, json: boolean): void {
+	if (result.error) fail(result.error, json);
+	printJson(result.data);
 }

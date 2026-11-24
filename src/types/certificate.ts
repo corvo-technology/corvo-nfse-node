@@ -1,15 +1,6 @@
-export interface Certificate {
-	id: string;
-	companyId: string;
-	serialNumber: string;
-	issuer: string;
-	subject: string;
-	fingerprint: string;
-	validFrom: string;
-	validUntil: string;
-	status: string;
-	createdAt: string;
-}
+import type { Certificate as CertificateSchema } from "./openapi";
+
+export type Certificate = CertificateSchema;
 
 export interface CertificateUploadParams {
 	file: Buffer | Uint8Array;
