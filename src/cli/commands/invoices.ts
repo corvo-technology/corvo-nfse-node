@@ -20,7 +20,7 @@ function toRow(invoice: Invoice): Record<string, unknown> {
 		stage: invoice.stage,
 		nfseNumber: invoice.nfseNumber ?? "-",
 		amount: invoice.amount,
-		customer: invoice.customerSnapshot.name,
+		customer: invoice.customerSnapshot?.name ?? "-",
 		createdAt: invoice.createdAt,
 	};
 }

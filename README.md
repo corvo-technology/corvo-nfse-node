@@ -9,7 +9,7 @@
 - **A CLI** (`corvo`) for the same operations.
 - **Small footprint.** The SDK uses the built-in `fetch`, `FormData`, `Blob` and `node:crypto`. The only dependency is `commander`, used by the CLI.
 
-Full API reference: <https://corvo.tech/en/docs>. The machine-readable contract (OpenAPI 3.0, version 0.3.0, 92 operations) is at <https://corvo.tech/openapi.json>; a copy lives in [`spec/openapi.json`](spec/openapi.json).
+Full API reference: <https://corvo.tech/en/docs>. The machine-readable contract (OpenAPI 3.0, version 0.3.0, 94 operations) is at <https://corvo.tech/openapi.json>; a copy lives in [`spec/openapi.json`](spec/openapi.json).
 
 ## Install
 
@@ -242,7 +242,7 @@ app.post("/webhooks", express.raw({ type: "application/json" }), (req, res) => {
 
 ## Resources
 
-Every one of the 92 operations of the contract has a method (`test/contract/coverage.test.ts` checks it).
+Every one of the 94 operations of the contract has a method (`test/contract/coverage.test.ts` checks it).
 
 | Resource | Methods |
 | --- | --- |

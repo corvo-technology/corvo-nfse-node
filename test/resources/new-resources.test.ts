@@ -360,7 +360,7 @@ describe("company sub-resources", () => {
 	it("invoicePackage.summary and download (ZIP bytes, include list)", async () => {
 		const { corvo, calls } = setup((call) =>
 			call.url.pathname.endsWith("/summary")
-				? jsonResponse({ data: { count: 3, total: 300, limit: 500, month: "2026-10" } })
+				? jsonResponse({ data: { count: 3, total: "300.00", limit: 500, month: "2026-10" } })
 				: new Response(Buffer.from([0x50, 0x4b, 3, 4]), {
 						status: 200,
 						headers: {
@@ -369,7 +369,9 @@ describe("company sub-resources", () => {
 						},
 					}),
 		);
-		expect((await corvo.companies.invoicePackage.summary("c1", "2026-10")).data?.count).toBe(3);
+		const summary = await corvo.companies.invoicePackage.summary("c1", "2026-10");
+		expect(summary.data?.count).toBe(3);
+		expect(summary.data?.total).toBe("300.00");
 		expect(calls[0].url.searchParams.get("month")).toBe("2026-10");
 		const zip = await corvo.companies.invoicePackage.download("c1", {
 			month: "2026-10",
@@ -510,9 +512,11 @@ describe("imports", () => {
 		expect(calls[0].url.searchParams.get("limit")).toBe("5");
 		await corvo.imports.emit("i1", { sendEmail: true });
 		expect(calls[1].body).toEqual({ sendEmail: true });
+		await corvo.imports.emit("i1");
+		expect(calls[2].body).toBeUndefined();
 		await corvo.imports.updateRow("i1", 4, { item: { amount: 10 } });
-		expect(calls[2].url.pathname).toBe("/v1/imports/i1/rows/4");
-		expect(calls[2].method).toBe("PATCH");
+		expect(calls[3].url.pathname).toBe("/v1/imports/i1/rows/4");
+		expect(calls[3].method).toBe("PATCH");
 		expect((await corvo.imports.discard("i1")).data).toBeNull();
 	});
 

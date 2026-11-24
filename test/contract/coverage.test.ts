@@ -289,6 +289,8 @@ const IMPLEMENTATIONS: Record<string, { call: Call; params?: Record<string, stri
 		call: (c) => c.companies.serviceTaxProfiles.remove(P, "svc-1"),
 		params: { id: P, serviceId: "svc-1" },
 	},
+	plans_get: { call: (c) => c.plans.get("solo"), params: { slug: "solo" } },
+	plans_list: { call: (c) => c.plans.list() },
 	serviceTaxProfiles_list: {
 		call: (c) => c.companies.serviceTaxProfiles.list(P, { date: "2026-10-01" }),
 		params: { id: P },
@@ -309,9 +311,9 @@ const IMPLEMENTATIONS: Record<string, { call: Call; params?: Record<string, stri
 };
 
 describe("contract coverage", () => {
-	it("targets the contract 0.3.0 with 92 operations", () => {
+	it("targets the contract 0.3.0 with 94 operations", () => {
 		expect(spec.info.version).toBe("0.3.0");
-		expect(operations).toHaveLength(92);
+		expect(operations).toHaveLength(94);
 	});
 
 	it("maps every operationId of the contract, and nothing else", () => {

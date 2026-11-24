@@ -212,15 +212,15 @@ export interface CnpjProfile {
 }
 
 export interface Company {
-	addressCity?: string;
-	addressComplement?: string;
-	addressDistrict?: string;
-	addressNumber?: string;
-	addressState?: string;
-	addressStreet?: string;
-	addressZip?: string;
+	addressCity?: string | null;
+	addressComplement?: string | null;
+	addressDistrict?: string | null;
+	addressNumber?: string | null;
+	addressState?: string | null;
+	addressStreet?: string | null;
+	addressZip?: string | null;
 	createdAt: string;
-	defaultServiceCode?: string;
+	defaultServiceCode?: string | null;
 	environment: "test" | "live";
 	fiscalSchemaVersion: string;
 	id: string;
@@ -228,22 +228,22 @@ export interface Company {
 	municipalityAgreement?: MunicipalityAgreement;
 	/** 7-digit IBGE code. */
 	municipalityCode?: string;
-	municipalReg?: string;
+	municipalReg?: string | null;
 	sendMunicipalReg?: boolean;
 	/** What is still missing before the company can issue (for example `certificate`). */
 	setupGaps: Array<string>;
 	simpleNational: boolean;
 	/** Percent, e.g. "2.00". */
-	simplesIssRate?: string;
+	simplesIssRate?: string | null;
 	/** Percent, e.g. "6.00". */
-	simplesRate?: string;
+	simplesRate?: string | null;
 	specialRegime: string | null;
 	status: "pending_setup" | "ready" | "blocked";
 	/** CNPJ, digits only. */
 	taxId: string;
-	taxRegime: "MEI" | "Simples Nacional" | "Lucro Presumido" | "Lucro Real" | null;
+	taxRegime: "MEI" | "Simples Nacional" | "Lucro Presumido" | "Lucro Real" | null | null;
 	tenantId: string;
-	tradeName?: string;
+	tradeName?: string | null;
 	updatedAt: string;
 	/** Only on creation: differences between what you sent and the public CNPJ registry. They never block the request. */
 	warnings?: Array<RegistryWarning>;
@@ -349,7 +349,7 @@ export interface CreateServiceTaxProfile {
 	effectiveUntil?: string | null;
 	incidenceMunicipalityCode?: string | null;
 	issRate?: string | null;
-	issTaxation?: "NORMAL" | "FIXED" | "EXEMPT" | null;
+	issTaxation?: "NORMAL" | "FIXED" | "EXEMPT" | null | null;
 	issWithholdingDefault?: boolean;
 	municipalServiceCode?: string | null;
 	name: string;
@@ -473,11 +473,6 @@ export interface EmailOptions {
 	send?: boolean;
 }
 
-export interface EmitImport {
-	/** Email each issued invoice to the customer. Only rows that have a customer email are sent. */
-	sendEmail?: boolean;
-}
-
 export interface FiscalProfile {
 	companyId: string;
 	createdAt: string;
@@ -488,10 +483,10 @@ export interface FiscalProfile {
 	reviewedBy: string | null;
 	reviewStatus: "unreviewed" | "approved" | "rejected";
 	simpleNational: boolean;
-	simplesApuracao?: "SN" | "ISS_MUNICIPAL" | "REGULAR" | null;
+	simplesApuracao?: "SN" | "ISS_MUNICIPAL" | "REGULAR" | null | null;
 	simplesIssRate: string | null;
 	source: string;
-	specialTaxRegime: "0" | "1" | "2" | "3" | "4" | "5" | "6" | null;
+	specialTaxRegime: "0" | "1" | "2" | "3" | "4" | "5" | "6" | null | null;
 	taxRegime:
 		| "MEI"
 		| "SIMPLES_NACIONAL"
@@ -707,7 +702,7 @@ export interface Invoice {
 	/** Justification given when the cancellation was requested */
 	cancellationDescription?: string | null;
 	/** Reason given when the cancellation was requested */
-	cancellationReason?: "issue_error" | "service_not_provided" | "other" | null;
+	cancellationReason?: "issue_error" | "service_not_provided" | "other" | null | null;
 	/** Set when the cancellation was requested while the invoice was being issued (processing); it is cancelled at the Sefin as soon as it is authorized */
 	cancellationRequestedAt?: string | null;
 	/** When the invoice reached cancelled */
@@ -717,7 +712,7 @@ export interface Invoice {
 	createdAt: string;
 	currency: string;
 	/** Null for anonymous consumer invoices (tomador omitted from the DPS). */
-	customerSnapshot: CustomerSnapshot;
+	customerSnapshot: CustomerSnapshot | null | null;
 	/** Deduction from the ISS tax base declared by the issuer. */
 	deduction?: number;
 	/** Unconditional discount applied to the amount. */
@@ -726,6 +721,7 @@ export interface Invoice {
 	/** Whether the PDF and XML can be downloaded. */
 	documentsStatus: "pending" | "ready";
 	dpsId: string | null;
+	/** The DPS number, a JSON integer (at most 15 digits, within the safe integer range of JavaScript). The leading zeros of the printed number are not kept. */
 	dpsNumber: number | null;
 	dpsSeries: string | null;
 	/** Whether the e-mail to the customer was requested. */
@@ -733,7 +729,7 @@ export interface Invoice {
 		send?: boolean;
 	};
 	/** Null when no e-mail was requested yet. */
-	emailStatus: "queued" | "sent" | "failed" | null;
+	emailStatus: "queued" | "sent" | "failed" | null | null;
 	/** Environment the invoice was issued in. */
 	environment: "test" | "live";
 	/** Your own reference, sent as `externalId` on creation. */
@@ -745,14 +741,15 @@ export interface Invoice {
 	idempotencyKey: string | null;
 	issuedAt: string | null;
 	lastEmailSentAt: string | null;
-	lastEmailStatus: "queued" | "sent" | "failed" | null;
+	lastEmailStatus: "queued" | "sent" | "failed" | null | null;
 	/** Rejection or failure code of the last attempt: an `E`-prefixed Sefin rule (E0014) or one of Corvo (DPS_NUMBER_ALREADY_USED, DPS_NUMBER_BELOW_CURRENT, ...). */
 	lastErrorCode: string | null;
 	lastErrorMessage: string | null;
 	lastErrorProvider: string | null;
+	/** The NFS-e number, a JSON integer (at most 15 digits, within the safe integer range of JavaScript). The leading zeros of the printed number are not kept. */
 	nfseNumber: number | null;
 	/** What the national portal reported after authorization (customer rejected the invoice, or the portal blocked it). */
-	portalFlag?: "taker_rejected" | "blocked" | null;
+	portalFlag?: "taker_rejected" | "blocked" | null | null;
 	scheduledFor?: string | null;
 	serviceSnapshot: ServiceSnapshot;
 	/** Single lifecycle view derived from the other fields: `completed` means authorized, documents ready and the requested e-mail resolved. */
@@ -790,8 +787,8 @@ export interface InvoiceBatch {
 
 export interface InvoiceBatchError {
 	code: string;
-	/** Field-level details, when the error has them. */
-	details?: Record<string, unknown>;
+	/** Field-level details, when the error has them (a list of issues for validation errors). */
+	details?: Array<Record<string, unknown>> | Record<string, unknown>;
 	message: string;
 }
 
@@ -837,10 +834,10 @@ export interface InvoiceBatchResult {
 }
 
 export interface InvoiceCalculation {
-	applicability: Applicability;
-	blocking: Blocking;
-	calculation: CalculationMetadata;
-	classification: Classification;
+	applicability: Applicability | null | null;
+	blocking: Blocking | null | null;
+	calculation: CalculationMetadata | null | null;
+	classification: Classification | null | null;
 	collectionWaived: boolean | null;
 	competenceDate: string;
 	disclaimer: string;
@@ -856,6 +853,7 @@ export interface InvoiceCalculation {
 		| "LUCRO_REAL"
 		| "OUTRO_REGIME"
 		| "UNKNOWN"
+		| null
 		| null;
 	trace: Array<CalculationTrace>;
 	warnings: Array<FiscalWarning>;
@@ -896,7 +894,7 @@ export interface InvoiceEvent {
 	portalEvent: string | null;
 	portalNsu: string | null;
 	reason: string | null;
-	source: "portal" | null;
+	source: "portal" | null | null;
 	/** An invoice status. */
 	toStatus: string;
 }
@@ -978,8 +976,8 @@ export interface PackageSummary {
 	/** Most notes a package can hold. */
 	limit: number;
 	month: string;
-	/** Sum of the amounts, in BRL. */
-	total: number;
+	/** Sum of the gross amount of the authorized notes, in BRL, as a decimal string with two places. */
+	total: string;
 }
 
 export interface PendingField {
@@ -1007,6 +1005,20 @@ export interface Plan {
 	supportTier: "community" | "email" | "priority";
 	throughputRps: number;
 	updatedAt: string;
+}
+
+export interface PlanPrice {
+	/** Full monthly price, in centavos. */
+	basePriceCents: number;
+	/** What is charged at once for the chosen cycle. */
+	chargeTotalCents: number;
+	currency: "BRL";
+	/** Notes included per month. */
+	monthlyAllowance: number;
+	/** Price per month in the chosen cycle (the annual cycle is discounted). */
+	monthlyEquivalentCents: number;
+	name: string;
+	slug: "solo" | "equipe" | "empresa" | "escala";
 }
 
 export interface PortalStatus {
@@ -1092,7 +1104,7 @@ export interface Schedule {
 	company_id: string;
 	created_at: string;
 	ends_on: string | null;
-	frequency: "WEEKLY" | "BIWEEKLY" | "MONTHLY" | null;
+	frequency: "WEEKLY" | "BIWEEKLY" | "MONTHLY" | null | null;
 	id: string;
 	/** The invoice body each run issues. */
 	invoice: {
@@ -1101,7 +1113,7 @@ export interface Schedule {
 	kind: "once" | "recurring";
 	last_run_on: string | null;
 	next_run_on: string | null;
-	pause_reason: "customer" | "failures" | null;
+	pause_reason: "customer" | "failures" | null | null;
 	status: "active" | "paused" | "completed" | "cancelled";
 }
 
@@ -1176,7 +1188,7 @@ export interface ServiceTaxProfile {
 	id: string;
 	incidenceMunicipalityCode: string | null;
 	issRate: string | null;
-	issTaxation: "NORMAL" | "FIXED" | "EXEMPT" | null;
+	issTaxation: "NORMAL" | "FIXED" | "EXEMPT" | null | null;
 	issWithholdingDefault: boolean;
 	municipalServiceCode: string | null;
 	name: string;
@@ -1225,7 +1237,7 @@ export interface UpdateAccountantPackage {
 }
 
 export interface UpdateCompany {
-	address?: CompanyAddress;
+	address?: CompanyAddress | null | null;
 	/** Default cTribNac. Null removes the default; omission preserves it. */
 	defaultServiceCode?: string | null;
 	legalName?: string;
@@ -1240,8 +1252,6 @@ export interface UpdateCompany {
 	simplesRate?: string;
 	/** Special tax regime (regEspTrib, RTC v1.01): 0 Nenhum, 1 Ato Cooperado, 2 Estimativa, 3 Microempresa Municipal, 4 Notário ou Registrador, 5 Profissional Autônomo, 6 Sociedade de Profissionais. Empty string clears it. */
 	specialRegime?: "0" | "1" | "2" | "3" | "4" | "5" | "6";
-	/** The CNPJ cannot be changed. Sending the current CNPJ is accepted and ignored; any other value returns 422. */
-	taxId?: string;
 	taxRegime?: "MEI" | "Simples Nacional" | "Lucro Presumido" | "Lucro Real";
 	tradeName?: string;
 }
@@ -1284,7 +1294,7 @@ export interface UpdateServiceTaxProfile {
 	effectiveUntil?: string | null;
 	incidenceMunicipalityCode?: string | null;
 	issRate?: string | null;
-	issTaxation?: "NORMAL" | "FIXED" | "EXEMPT" | null;
+	issTaxation?: "NORMAL" | "FIXED" | "EXEMPT" | null | null;
 	issWithholdingDefault?: boolean;
 	municipalServiceCode?: string | null;
 	name?: string;
@@ -1308,9 +1318,9 @@ export interface UpsertFiscalProfile {
 	ibsCbsRegularOption?: boolean;
 	simpleNational?: boolean;
 	/** How a ME/EPP apportions federal and municipal taxes (DPS regApTribSN). Only SN (1) is supported; omit it for MEI. ISS_MUNICIPAL and REGULAR (above a sublimit) are refused. */
-	simplesApuracao?: "SN" | null;
+	simplesApuracao?: "SN" | null | null;
 	/** Special tax regime (regEspTrib, RTC v1.01): 0 Nenhum, 1 Ato Cooperado, 2 Estimativa, 3 Microempresa Municipal, 4 Notário ou Registrador, 5 Profissional Autônomo, 6 Sociedade de Profissionais. Null means none. */
-	specialTaxRegime?: "0" | "1" | "2" | "3" | "4" | "5" | "6" | null;
+	specialTaxRegime?: "0" | "1" | "2" | "3" | "4" | "5" | "6" | null | null;
 	/** Tax regime for the new validity period. */
 	taxRegime:
 		| "MEI"
@@ -1327,7 +1337,7 @@ export interface Webhook {
 	active: boolean;
 	createdAt: string;
 	/** Set when an API key created it: it then only gets events of that environment. */
-	environment: "test" | "live" | null;
+	environment: "test" | "live" | null | null;
 	events: Array<WebhookEventType>;
 	id: string;
 	updatedAt: string;

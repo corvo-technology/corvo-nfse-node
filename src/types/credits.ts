@@ -2,6 +2,7 @@ import type {
 	CreditBalance as CreditBalanceSchema,
 	CreditTransaction as CreditTransactionSchema,
 	Plan,
+	PlanPrice,
 	PurchasePreview,
 } from "./openapi";
 
@@ -25,16 +26,10 @@ export interface CreditHistoryParams {
 /** `GET /credits/purchase/preview?units=N`: R$ 0,99 each, at least 3 notes. */
 export type CreditPurchasePreview = PurchasePreview;
 
-/** Public catalog entry (`GET /plans`): prices in centavos, monthly cycle only. */
-export interface PlanQuote {
-	slug: string;
-	name: string;
-	monthlyAllowance: number;
-	basePriceCents: number;
-	perCreditOverageCents?: number;
-	monthlyTotalCents: number;
-	currency: "BRL";
-}
+/** Public catalog entry (`GET /plans`, no API key): prices in centavos for the chosen billing cycle. */
+export type PlanQuote = PlanPrice;
+
+export type PlanCycle = "monthly" | "annual";
 
 /** Recommendation for a monthly volume (`GET /plans/quote`). Note the snake_case keys. */
 export interface PlanRecommendation {

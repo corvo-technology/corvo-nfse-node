@@ -2,7 +2,7 @@
 
 ## 0.3.0 (2026-11-24)
 
-Updates the SDK to the public API contract 0.3.0 (`spec/openapi.json`, 92 operations).
+Updates the SDK to the public API contract 0.3.0 (`spec/openapi.json`, 94 operations).
 
 ### Breaking
 
@@ -14,6 +14,11 @@ Updates the SDK to the public API contract 0.3.0 (`spec/openapi.json`, 92 operat
 - Types follow the contract exactly (see `src/types/openapi.ts`): the `Invoice` fields `documentsReadyAt`, `documentsStatus`, `emailStatus`, `lastEmailStatus`, `stage`; 12 webhook events (`nfse.invoice.taker_rejected` added); `Webhook.environment`; `webhooks.test()` returns `{ sent: false, error, statusCode }` on a failed delivery.
 - A test key can no longer manage live webhooks, and webhook URLs on private networks are refused (API behavior).
 
+- `companies.invoicePackage.summary()`: `total` is now a decimal string such as `"1234.50"` (was a number).
+- `companies.update()`: `taxId` was removed from the params (the CNPJ cannot be changed).
+- `nfseNumber`, `dpsNumber` and `DpsSequence.lastNumber` are integers (int64, at least 1).
+- `invoices.sendEmail` and `imports.emit` send no body when there are no params; `invoices.batch` error `details` can be an array of issues or an object.
+
 ### Added
 
 - Resources: `customers`, `cnpj`, `schedules`, `imports`, `integrations` (providers, connections, operations), `fiscalPortal`.
@@ -22,6 +27,8 @@ Updates the SDK to the public API contract 0.3.0 (`spec/openapi.json`, 92 operat
 - Request fields: `RECURRING` with `recurrence`, `purchaseOrder`, `notes`, `customer.foreign`, `service.fiscal`.
 - CLI: `cnpj`, `customers`, `schedules`, `imports`, `package`, `credits preview`, `invoices substitute|overview|review`, `invoices list --customer-tax-id`, `invoices email --to`.
 - `User-Agent: corvo-nfse-node/<version>` on every request; `PUT` in the transport.
+- Public plan endpoints `plans.list({ cycle })` and `plans.get(slug, { cycle })` (`GET /plans`, `GET /plans/{slug}`, no API key); they return `PlanPrice` (`monthlyEquivalentCents`, `chargeTotalCents`, ...). `PlanQuote` is now an alias of it.
+- Nullable fields in the contract: `Company` (`tradeName`, `address*`, `municipalReg`, `defaultServiceCode`, tax rates), `Invoice` (`emailStatus`, `lastEmailStatus`, `cancellationReason`, `portalFlag`, `customerSnapshot`) and `invoices.calculate` (`classification`, `applicability`, `calculation`).
 - `spec/openapi.json` (vendored contract), `scripts/gen-types.mjs` (`yarn gen:types`) and `test/contract/coverage.test.ts` (every operationId must be implemented and hit the contract's method and path).
 - GitHub Actions: `ci.yml` (lint, typecheck, test, build on Node 18, 20, 22) and `publish.yml` (tag `v*`, npm with provenance).
 

@@ -1,5 +1,4 @@
 import type {
-	EmitImport,
 	ImportJob as ImportJobSchema,
 	ImportRow as ImportRowSchema,
 	ImportStart,
@@ -10,7 +9,10 @@ import type {
 export type ImportJob = ImportJobSchema;
 export type ImportRow = ImportRowSchema;
 export type ImportStarted = ImportStart;
-export type ImportEmitParams = EmitImport;
+/** The emit call has no documented body; `sendEmail` is only forwarded when you set it. */
+export interface ImportEmitParams {
+	sendEmail?: boolean;
+}
 export type ImportRowUpdateParams = UpdateImportRow;
 
 export interface ImportStartParams {

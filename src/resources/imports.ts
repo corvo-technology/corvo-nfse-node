@@ -47,11 +47,11 @@ export class ImportsResource {
 	}
 
 	/** Emit every valid row. Safe to call twice. */
-	emit(id: string, params: ImportEmitParams = {}): Promise<Result<ImportJob>> {
+	emit(id: string, params?: ImportEmitParams): Promise<Result<ImportJob>> {
 		return this.http.request<ImportJob>({
 			method: "POST",
 			path: `/imports/${encodeURIComponent(id)}/emit`,
-			body: params,
+			body: params && Object.keys(params).length > 0 ? params : undefined,
 		});
 	}
 
