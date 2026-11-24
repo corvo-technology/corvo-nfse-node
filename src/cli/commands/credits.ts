@@ -18,6 +18,16 @@ export function registerCredits(program: Command): void {
 		},
 	);
 
+	commonOptions(credits.command("preview").description("Price a one-off purchase of N notes"))
+		.requiredOption("--units <n>", "Number of notes (at least 3)")
+		.action(async function (this: Command) {
+			const opts = this.opts() as CliOptions;
+			const client = buildClient(opts);
+			const result = await client.credits.previewPurchase(Number(opts.units));
+			if (result.error) fail(result.error, Boolean(opts.json));
+			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
+		});
+
 	commonOptions(credits.command("plans").description("Available credit plans"))
 		.option("--limit <n>", "Page size (1-1000)")
 		.option("--cursor <cursor>", "Cursor from a previous page")

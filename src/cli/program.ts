@@ -1,11 +1,16 @@
 import { Command } from "commander";
 import { VERSION } from "../index";
+import { registerAccountantPackage } from "./commands/accountant-package";
 import { registerBilling } from "./commands/billing";
 import { registerCertificates } from "./commands/certificates";
+import { registerCnpj } from "./commands/cnpj";
 import { registerCompanies } from "./commands/companies";
 import { registerCredits } from "./commands/credits";
+import { registerCustomers } from "./commands/customers";
 import { registerHealth } from "./commands/health";
+import { registerImports } from "./commands/imports";
 import { registerInvoices } from "./commands/invoices";
+import { registerSchedules } from "./commands/schedules";
 import { registerWebhooks } from "./commands/webhooks";
 import { buildClient, configPath, readConfig, writeConfig } from "./config";
 import type { CliOptions } from "./options";
@@ -78,6 +83,11 @@ export function createProgram(): Command {
 	registerCredits(program);
 	registerBilling(program);
 	registerHealth(program);
+	registerCnpj(program);
+	registerCustomers(program);
+	registerSchedules(program);
+	registerImports(program);
+	registerAccountantPackage(program);
 
 	return program;
 }

@@ -1,6 +1,6 @@
 {
   "name": "corvo-nfse-node",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Node.js SDK and CLI for the Corvo NFS-e API",
   "license": "MIT",
   "type": "module",
@@ -29,6 +29,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check src test",
     "format": "biome check --write src test",
+    "gen:types": "node scripts/gen-types.mjs && biome check --write src/types/openapi.ts",
     "clean": "rm -rf dist",
     "prepublishOnly": "yarn typecheck && yarn lint && yarn test && yarn build"
   },

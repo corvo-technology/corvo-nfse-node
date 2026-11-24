@@ -34,6 +34,7 @@ export function registerInvoices(program: Command): void {
 		.option("--from <date>", "Competence start date (ISO)")
 		.option("--to <date>", "Competence end date (ISO)")
 		.option("--external-id <id>", "Filter by externalId")
+		.option("--customer-tax-id <id>", "Filter by customer CPF/CNPJ (digits)")
 		.option("--limit <n>", "Page size (1-1000)")
 		.option("--cursor <cursor>", "Cursor from a previous page")
 		.action(async function (this: Command) {
@@ -45,6 +46,7 @@ export function registerInvoices(program: Command): void {
 				from: opts.from,
 				to: opts.to,
 				externalId: opts.externalId,
+				customerTaxId: opts.customerTaxId,
 				limit: opts.limit ? Number(opts.limit) : undefined,
 				cursor: opts.cursor,
 			};
@@ -170,10 +172,14 @@ export function registerInvoices(program: Command): void {
 	commonOptions(invoices.command("email").description("Send the invoice to the customer"))
 		.argument("<id>")
 		.option("--idempotency-key <key>", "Idempotency-Key header value")
+		.option("--to <email>", "Send to this address instead of the customer's")
 		.action(async function (this: Command, id: string) {
 			const opts = this.opts() as CliOptions;
 			const client = buildClient(opts);
-			const result = await client.invoices.sendEmail(id, { idempotencyKey: opts.idempotencyKey });
+			const result = await client.invoices.sendEmail(id, {
+				idempotencyKey: opts.idempotencyKey,
+				email: opts.to,
+			});
 			if (result.error) fail(result.error, Boolean(opts.json));
 			if (opts.json) return printJson(result.data);
 			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
@@ -196,6 +202,48 @@ export function registerInvoices(program: Command): void {
 			});
 			if (result.error) fail(result.error, Boolean(opts.json));
 			if (opts.json) return printJson(result.data);
+			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
+		});
+
+	commonOptions(
+		invoices.command("substitute").description("Replace an authorized invoice (JSON payload)"),
+	)
+		.argument("<id>")
+		.option("--file <path>", "JSON file: { description, service?, purchaseOrder?, notes? }")
+		.option("--idempotency-key <key>", "Idempotency-Key header value")
+		.action(async function (this: Command, id: string) {
+			const opts = this.opts() as CliOptions;
+			const payload = await readPayload(opts.file);
+			const client = buildClient(opts);
+			const result = await client.invoices.substitute(id, payload as never, {
+				idempotencyKey: opts.idempotencyKey,
+			});
+			if (result.error) fail(result.error, Boolean(opts.json));
+			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
+		});
+
+	commonOptions(invoices.command("overview").description("Counts and daily activity"))
+		.option("--period <period>", "7d or 30d", "7d")
+		.action(async function (this: Command) {
+			const opts = this.opts() as CliOptions;
+			if (opts.period !== "7d" && opts.period !== "30d") failFatal("--period must be 7d or 30d");
+			const client = buildClient(opts);
+			const result = await client.invoices.overview({ period: opts.period });
+			if (result.error) fail(result.error, Boolean(opts.json));
+			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
+		});
+
+	commonOptions(
+		invoices.command("review").description("Resolve invoices in manual review: retry or discard"),
+	)
+		.argument("<action>", "retry or discard")
+		.argument("<ids...>", "Invoice ids (up to 100)")
+		.action(async function (this: Command, action: string, ids: string[]) {
+			const opts = this.opts() as CliOptions;
+			if (action !== "retry" && action !== "discard") failFatal("action must be retry or discard");
+			const client = buildClient(opts);
+			const result = await client.invoices.review({ action, invoiceIds: ids });
+			if (result.error) fail(result.error, Boolean(opts.json));
 			process.stdout.write(`${JSON.stringify(result.data, null, 2)}\n`);
 		});
 }

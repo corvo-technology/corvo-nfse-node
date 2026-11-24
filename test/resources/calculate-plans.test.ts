@@ -65,14 +65,12 @@ describe("plans (public catalog)", () => {
 		const corvo = client(async (url) => {
 			expect(url).toBe(`${BASE_URL}/v1/plans?limit=5`);
 			return jsonResponse({
-				data: [
-					{ slug: "developer", monthlyAllowance: 200, monthlyTotalCents: 2990, currency: "BRL" },
-				],
+				data: [{ slug: "solo", monthlyAllowance: 100, monthlyTotalCents: 9900, currency: "BRL" }],
 				pagination: { limit: 5, hasMore: false, nextCursor: null },
 			});
 		});
 		const res = await corvo.plans.list({ limit: 5 });
-		expect(res.data?.data[0].slug).toBe("developer");
+		expect(res.data?.data[0].slug).toBe("solo");
 	});
 
 	it("get and quote hit the right paths", async () => {

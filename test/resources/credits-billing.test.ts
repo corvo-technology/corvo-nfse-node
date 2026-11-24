@@ -30,20 +30,18 @@ describe("credits", () => {
 		const corvo = client(async () =>
 			jsonResponse({
 				data: {
-					tenantId: "t_1",
-					balance: 200,
-					overageUnits: 0,
-					overageAmountCents: 0,
+					balance: 205,
+					planRemaining: 200,
+					avulsoBalance: 5,
 					hardLimit: 1000,
 				},
 			}),
 		);
 		const res = await corvo.credits.balance();
 		expect(res.data).toEqual({
-			tenantId: "t_1",
-			balance: 200,
-			overageUnits: 0,
-			overageAmountCents: 0,
+			balance: 205,
+			planRemaining: 200,
+			avulsoBalance: 5,
 			hardLimit: 1000,
 		});
 	});
@@ -93,12 +91,12 @@ describe("billing", () => {
 	it("plan returns the real snake_case payload", async () => {
 		const payload = {
 			plan: {
-				slug: "developer",
-				name: "Developer",
-				monthly_allowance: 200,
+				slug: "solo",
+				name: "Solo",
+				monthly_allowance: 100,
 				daily_limit: null,
 				max_active_companies: 10,
-				monthly_price_cents: 2990,
+				monthly_price_cents: 9900,
 			},
 			subscription: {
 				status: "active",
@@ -111,7 +109,7 @@ describe("billing", () => {
 		};
 		const corvo = client(async () => jsonResponse({ data: payload }));
 		const res = await corvo.billing.plan();
-		expect(res.data?.plan.slug).toBe("developer");
+		expect(res.data?.plan.slug).toBe("solo");
 		expect(res.data?.subscription.status).toBe("active");
 		expect(res.data?.usage.credits_remaining).toBe(200);
 	});

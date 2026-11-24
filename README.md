@@ -9,7 +9,7 @@
 - **A CLI** (`corvo`) for the same operations.
 - **Small footprint.** The SDK uses the built-in `fetch`, `FormData`, `Blob` and `node:crypto`. The only dependency is `commander`, used by the CLI.
 
-Full API reference: <https://corvo.tech/en/docs>.
+Full API reference: <https://corvo.tech/en/docs>. The machine-readable contract (OpenAPI 3.0, version 0.3.0, 92 operations) is at <https://corvo.tech/openapi.json>; a copy lives in [`spec/openapi.json`](spec/openapi.json).
 
 ## Install
 
@@ -50,7 +50,7 @@ if (error) {
 const { data: company, error } = await corvo.companies.create({
   legalName: "Empresa Exemplo Ltda",
   taxId: "11222333000181",
-  taxRegime: "Simples Nacional", // "MEI" | "Simples Nacional" (the only regimes Corvo serves)
+  taxRegime: "Simples Nacional", // "MEI" | "Simples Nacional" | "Lucro Presumido" | "Lucro Real"
   simplesRate: "6.54", // required for Simples Nacional: effective DAS rate (%), ignored for MEI
   municipalityCode: "3550308", // IBGE code, 7 digits
   defaultServiceCode: "010101", // optional: used when an invoice omits service.code
@@ -102,7 +102,55 @@ const { data: invoice, error } = await corvo.invoices.create(
 );
 ```
 
-Use `options: { type: "SCHEDULE" }` with a future `competenceDate` to schedule the issuance.
+### Schedule or repeat an invoice
+
+With `options.type` `SCHEDULE` (once) or `RECURRING` (every week, two weeks or month) the API does **not** create a note now: it answers `202` with a *schedule* (snake_case fields). The note is issued when the schedule runs (09:00 America/Sao_Paulo, Monday to Friday). `competenceDate` is the date of the first run and must be from tomorrow on.
+
+```ts
+const { data: schedule } = await corvo.invoices.create({
+  companyTaxId: "11222333000181",
+  service: { description: "Mensalidade" },
+  amount: 300,
+  competenceDate: "2026-12-01",
+  options: { type: "RECURRING", recurrence: { frequency: "MONTHLY", endsOn: "2027-12-01" } },
+}); // typed as Schedule: schedule.next_run_on, schedule.status ...
+
+await corvo.schedules.pause(schedule.id);
+const runs = await corvo.schedules.listRuns(schedule.id); // every attempt, newest first
+```
+
+When the type is not known at compile time, `data` is `Invoice | Schedule`: use `isSchedule(data)`.
+
+### Look up a CNPJ, save customers and favorite services
+
+```ts
+const { data: cnpj } = await corvo.cnpj.lookup("11222333000181"); // legalName, simples, mei, address ...
+const { data: customers } = await corvo.customers.search({ search: "ana" });
+await corvo.customers.update("52998224725", { email: "novo@example.com" });
+await corvo.companies.serviceFavorites.create(company.id, {
+  label: "Consultoria", serviceCode: "010101", description: "Consultoria", amountCents: 150000,
+});
+```
+
+### Substitute an invoice and send the monthly package to the accountant
+
+```ts
+await corvo.invoices.substitute(invoiceId, { description: "Descrição do serviço corrigida" }, { idempotencyKey: "sub-1" });
+await corvo.invoices.sendEmail(invoiceId, { email: "outro@example.com" }); // another address than the customer's
+
+await corvo.companies.accountantPackage.update(company.id, { accountantEmail: "contador@example.com" });
+await corvo.companies.accountantPackage.send(company.id, { month: "2026-10" });
+const { data: zip } = await corvo.companies.invoicePackage.download(company.id, { month: "2026-10" });
+```
+
+### Import a spreadsheet
+
+```ts
+const { data: job } = await corvo.imports.start({ file: readFileSync("notas.xlsx"), fileName: "notas.xlsx", companyId: company.id });
+// follow it with corvo.imports.get(job.id) until status is "ready", then:
+await corvo.imports.emit(job.id, { sendEmail: true });
+const errors = await corvo.imports.downloadErrors(job.id); // CSV bytes
+```
 
 To declare a deduction from the ISS base, send `deduction` (greater than 0 and less than `amount` minus `discount`). The invoice is still issued for the full `amount`, and you are responsible for the declared value.
 
@@ -194,18 +242,34 @@ app.post("/webhooks", express.raw({ type: "application/json" }), (req, res) => {
 
 ## Resources
 
+Every one of the 92 operations of the contract has a method (`test/contract/coverage.test.ts` checks it).
+
 | Resource | Methods |
 | --- | --- |
 | `corvo.companies` | `create`, `list`, `iterate`, `get`, `update`, `remove` |
+| `corvo.companies.accountantPackage` | `get`, `update`, `send`, `listSends` |
+| `corvo.companies.invoicePackage` | `summary`, `download` (ZIP) |
+| `corvo.companies.dpsSequence` | `get`, `set` |
+| `corvo.companies.fiscalProfiles` | `list`, `upsert`, `approve` |
+| `corvo.companies.serviceTaxProfiles` | `list`, `create`, `update`, `remove`, `approve` |
+| `corvo.companies.serviceFavorites` | `list`, `create`, `remove` |
 | `corvo.certificates` | `upload`, `list`, `remove` |
-| `corvo.invoices` | `create`, `createBatch`, `calculate`, `list`, `iterate`, `get`, `events`, `pdf`, `xml`, `downloadUrl`, `sendEmail`, `cancel` |
+| `corvo.invoices` | `create`, `createBatch`, `calculate`, `list`, `iterate`, `get`, `events`, `pdf`, `xml`, `downloadUrl`, `sendEmail`, `cancel`, `substitute`, `overview`, `review` |
+| `corvo.customers` | `search`, `iterate`, `get`, `update`, `remove` |
+| `corvo.cnpj` | `lookup` |
+| `corvo.schedules` | `list`, `iterate`, `get`, `update`, `pause`, `resume`, `cancel`, `listRuns`, `iterateRuns` |
+| `corvo.imports` | `start`, `list`, `get`, `emit`, `listRows`, `iterateRows`, `updateRow`, `discard`, `downloadTemplate`, `downloadErrors` |
+| `corvo.integrations` | `listProviders`, `connections.*` (`create`, `list`, `get`, `validate`, `updateCredentials`, `activate`, `pause`, `disconnect`, `listRules`, `replaceRules`, `listEvents`, `listOperations`), `operations.completeCustomer`, `operations.retry` |
 | `corvo.webhooks` | `list`, `iterate`, `create`, `remove`, `test`, `deliveries.list`, `deliveries.iterate`, `deliveries.stats`, `deliveries.retry` |
-| `corvo.credits` | `balance`, `plans`, `history`, `iterateHistory` |
+| `corvo.credits` | `balance`, `plans`, `history`, `iterateHistory`, `previewPurchase` |
 | `corvo.billing` | `plan`, `usage` |
+| `corvo.fiscalPortal` | `status` |
 | `corvo.plans` | `list`, `get`, `quote` (public price catalog) |
 | `corvo.health` | `live`, `ready` |
 
-Changing plans and the billing portal exist only in the dashboard, so they are not in the SDK.
+Plan slugs are `free`, `solo`, `equipe`, `empresa`, `escala` (and `self-hosted`); treat them as open strings. `credits.balance()` returns `balance` (plan notes plus loose notes), `planRemaining` and `avulsoBalance`. Buying credits and changing plans happen in the dashboard.
+
+A key only reaches the webhooks of its own environment: manage live webhooks with a `corvo_live_` key. Webhook URLs that resolve to private networks are refused.
 
 ## CLI
 
@@ -220,6 +284,12 @@ corvo invoices pdf <id> -o nota.pdf
 corvo invoices cancel <id> --reason issue_error --description "Wrong amount on the invoice"
 corvo webhooks deliveries stats --hours 24
 corvo credits balance
+corvo credits preview --units 10
+corvo cnpj 11222333000181
+corvo customers search --search ana
+corvo schedules list --status active
+corvo imports start notas.xlsx --company-id <id>
+corvo package download <companyId> --month 2026-10
 corvo billing usage
 corvo health live
 ```
@@ -244,9 +314,10 @@ yarn test        # vitest
 yarn typecheck   # tsc --noEmit
 yarn lint        # biome check
 yarn build       # tsup (ESM + CJS + types)
+yarn gen:types   # regenerate src/types/openapi.ts from spec/openapi.json
 ```
 
-Contract tests run only when `CORVO_API_KEY` and `CORVO_BASE_URL` point to a reachable instance.
+`test/contract/coverage.test.ts` loads `spec/openapi.json` and fails when an operation has no SDK method. To follow a new contract, replace `spec/openapi.json`, run `yarn gen:types` and map the new operations. Live contract tests run only when `CORVO_API_KEY` and `CORVO_BASE_URL` point to a reachable instance.
 
 ## License
 
